@@ -19,7 +19,7 @@ pipeline {
                 echo 'Running tests'
                 // Define test steps here
                 sh 'mvn test'
-                stash (name: 'project-ansible', includes: "target/*.war")
+                stash (name: 'projectansible', includes: "target/*.war")
             }
         }
         stage('Deploy') {
