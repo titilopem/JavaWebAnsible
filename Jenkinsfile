@@ -29,7 +29,7 @@ pipeline {
             steps {
                 echo 'Deploying the application'
                 // Define deployment steps here
-                unstash 'project-ansible'
+                unstash 'projectansible'
                 sh "sudo rm -rf ~/apache*/webapp/*.war" 
                 sh "sudo mv target/*.war ~/apache*/webapps/"
                 sh "sudo systemctl daemon-reload"
