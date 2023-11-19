@@ -19,7 +19,7 @@ pipeline {
                 echo 'Running tests'
                 // Define test steps here
                 sh 'mvn test'
-                stash (name: 'JenkinsProject', includes: "target/*.war")
+                stash (name: 'project-ansible', includes: "target/*.war")
             }
         }
         stage('Deploy') {
@@ -29,7 +29,7 @@ pipeline {
             steps {
                 echo 'Deploying the application'
                 // Define deployment steps here
-                unstash 'JenkinsProject'
+                unstash 'project-ansible'
                 sh "sudo rm -rf ~/apache*/webapp/*.war" 
                 sh "sudo mv target/*.war ~/apache*/webapps/"
                 sh "sudo systemctl daemon-reload"
