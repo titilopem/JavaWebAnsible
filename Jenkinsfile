@@ -24,31 +24,17 @@ pipeline {
         }
         stage('Deploy') {
             agent {
-                label 'node2u || node1a || node3c'
+                label 'node2u'
             }
             steps {
                 echo 'Deploying the application'
                 // Define deployment steps here
+                unstash 'project-ansible'
                 unstash 'projectansible'
-                script {
-                    def apacheDir = "~/apache-tomcat/webapps/"
-                    def tomcatBin = "~/apache-tomcat/bin/"
-
-                    // Adjust commands based on the operating system
-                    if (isUnix()) {
-                        sh "sudo rm -rf ${apacheDir}/*.war"
-                        sh "sudo mkdir -p ${apacheDir}"  // Create the directory if it doesn't exist
-                        sh "sudo mv target/*.war ${apacheDir}"
-                        sh "sudo systemctl daemon-reload"
-                        sh "${tomcatBin}/startup.sh"
-                    } else if (isWindows()) {
-                        // Add Windows deployment commands if needed
-                        echo "Windows deployment steps go here"
-                    } else {
-                        // Add other operating systems deployment commands if needed
-                        echo "Other OS deployment steps go here"
-                    }
-                }
+                sh "sudo rm -rf ~/apache*/webapp/*.war" 
+                sh "sudo mv target/*.war ~/apache*/webapps/"
+                sh "sudo systemctl daemon-reload"
+                sh "~/apache-tomcat-7.0.94/bin/startup.sh"
             }
         }
     }
