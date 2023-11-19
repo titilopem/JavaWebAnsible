@@ -18,7 +18,7 @@ pipeline {
             steps {
                 echo 'Running tests'
                 // Define test steps here
-                sh 'mvn test'
+                sh '/opt/maven/bin/mvn test'
                 stash (name: 'projectansible', includes: "target/*.war")
             }
         }
