@@ -1,1 +1,20 @@
+---
+- name: Deploy Web App on Tomcat
+  hosts: group1
+  become: true
 
+  tasks:
+    - name: Copy WAR file to Tomcat server
+      copy:
+        src: "/var/jenkins_home/jobs/projectansible/workspace/projectansible/target/*.war"
+        dest: "/path/to/tomcat/webapps/your_webapp.war"
+        mode: 0644
+      notify:
+        - Restart Tomcat
+
+  handlers:
+    - name: Restart Tomcat
+      service:
+        name: "tomcat"
+        state: restarted
+...
