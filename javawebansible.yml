@@ -4,29 +4,38 @@
   become: true
 
   tasks:
-    - name: Copy WAR file to the deployment directory
-      copy:
-        src: "{{ war_file }}"
-        dest: "/path/to/deployment/directory/your_app.war"
-      notify:
-        - Restart Tomcat
-
-  handlers:
-    - name: Restart Tomcat
-      systemd:
-        name: tomcat
-        state: restarted
+    - name: Remove existing WAR files from Tomcat webapps directory
+      ansible.builtin.shell:
+        cmd: "sudo rm -rf /usr/local/latest/webapps/*.war"
+      become_user: "{{ tomcat_user }}"
+      become_method: sudo
       when: ansible_os_family == 'RedHat'
 
-    - name: Restart Tomcat
-      systemd:
-        name: tomcat
-        state: restarted
-      when: ansible_distribution == 'Ubuntu'
+    - name: Remove existing WAR files from Tomcat webapps directory
+      ansible.builtin.shell:
+        cmd: "sudo rm -rf /usr/local/latest/webapps/*.war"
+      become_user: "{{ tomcat_user }}"
+      become_method: sudo
+      when: ansible_os_family == 'Debian'
 
-    - name: Restart Tomcat
-      service:
-        name: tomcat
-        state: restarted
-      when: ansible_distribution == 'Amazon'
+    - name: Copy WAR file to Tomcat webapps directory
+      ansible.builtin.shell:
+        cmd: "sudo mv {{ war_file }} /usr/local/latest/webapps/"
+      become_user: "{{ tomcat_user }}"
+      become_method: sudo
+      when: ansible_os_family == 'RedHat' or ansible_os_family == 'Debian'
+
+    - name: Reload systemd configuration
+      ansible.builtin.systemd:
+        daemon_reload: yes
+      become_user: "{{ tomcat_user }}"
+      become_method: sudo
+      when: ansible_os_family == 'RedHat' or ansible_os_family == 'Debian'
+
+    - name: Start Tomcat
+      ansible.builtin.shell:
+        cmd: "/usr/local/latest/bin/startup.sh"
+      become_user: "{{ tomcat_user }}"
+      become_method: sudo
+      when: ansible_os_family == 'RedHat' or ansible_os_family == 'Debian'
 ...
