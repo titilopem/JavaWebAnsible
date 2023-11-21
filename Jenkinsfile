@@ -9,27 +9,6 @@ pipeline {
     }
 
     stages {
-        stage('Start SSH Agent for n1a') {
-            agent any
-            steps {
-                sshagent(credentials: [CREDENTIALS_N1A]) {
-                    sh 'env'
-                }
-            }
-        }
-
-        stage('Fetch Ansible Files') {
-            agent {
-                label 'n4c'
-            }
-            steps {
-                dir(WORKSPACE_PATH) {
-                    checkout scm
-                    stash name: 'ansibleFiles', includes: '*.yml, *.ini'
-                }
-            }
-        }
-
         stage('Build and Test') {
             agent {
                 label 'n4c'
@@ -43,6 +22,7 @@ pipeline {
         }
 
         stage('Copy Web App to Nodes') {
+            dependsOn 'Build and Test'
             parallel {
                 stage('Copy to n1a') {
                     agent {
@@ -53,7 +33,7 @@ pipeline {
                             echo 'Copying the application to n1a'
                             unstash 'application'
                             unstash 'ansibleFiles'
-                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n1a']
+                            // Your copy logic to n1a here
                         }
                     }
                 }
@@ -67,7 +47,7 @@ pipeline {
                             echo 'Copying the application to n2u'
                             unstash 'application'
                             unstash 'ansibleFiles'
-                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n2u']
+                            // Your copy logic to n2u here
                         }
                     }
                 }
@@ -81,7 +61,7 @@ pipeline {
                             echo 'Copying the application to n3c'
                             unstash 'application'
                             unstash 'ansibleFiles'
-                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n3c']
+                            // Your copy logic to n3c here
                         }
                     }
                 }
@@ -89,6 +69,7 @@ pipeline {
         }
 
         stage('Deploy with Ansible') {
+            dependsOn 'Copy Web App to Nodes'
             agent {
                 label 'n4c'
             }
