@@ -43,7 +43,7 @@ pipeline {
                     unstash 'application'
                     unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N1A]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [workspace_path: '/home/centos/workspace/ansibleproject']
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n1a']
                     }
                 }
             }
@@ -58,7 +58,7 @@ pipeline {
                     unstash 'application'
                     unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N2U]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [workspace_path: '/home/centos/workspace/ansibleproject']
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n2u']
                     }
                 }
             }
@@ -73,7 +73,7 @@ pipeline {
                     unstash 'application'
                     unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N3C]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [workspace_path: '/home/centos/workspace/ansibleproject']
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n3c']
                     }
                 }
             }
