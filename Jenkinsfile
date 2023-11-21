@@ -1,7 +1,7 @@
 pipeline {
     agent none
     environment {
-        WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
+        WORKSPACE_PATH = ''
     }
     stages {
         stage('Fetch Ansible Files') {
@@ -9,9 +9,12 @@ pipeline {
                 label 'n4c'
             }
             steps {
-                echo 'Fetching Ansible files from GitHub'
-                dir(WORKSPACE_PATH) {
-                    checkout scm
+                script {
+                    WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
+                    echo 'Fetching Ansible files from GitHub'
+                    dir(WORKSPACE_PATH) {
+                        checkout scm
+                    }
                 }
             }
         }
@@ -20,8 +23,11 @@ pipeline {
                 label 'n4c'
             }
             steps {
-                echo 'Building the application'
-                sh '/opt/maven/bin/mvn clean package'
+                script {
+                    WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
+                    echo 'Building the application'
+                    sh '/opt/maven/bin/mvn clean package'
+                }
             }
         }
         stage('Test') {
@@ -29,9 +35,11 @@ pipeline {
                 label 'n4c'
             }
             steps {
-                echo 'Running tests'
-                sh 'mvn test'
-                stash(name: 'ansibleproject', includes: "${WORKSPACE_PATH}/target/*.war")
+                script {
+                    echo 'Running tests'
+                    sh 'mvn test'
+                    stash (name: 'ansibleproject', includes: "${WORKSPACE_PATH}/target/*.war")
+                }
             }
         }
         stage('Deploy on Amazon') {
@@ -39,8 +47,9 @@ pipeline {
                 label 'n1a'
             }
             steps {
-                echo 'Deploying the application to n1a'
                 script {
+                    WORKSPACE_PATH = '/home/ec2-user/workspace/ansibleproject'
+                    echo 'Deploying the application to n1a'
                     unstash 'ansibleproject'
                     ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
                 }
@@ -51,8 +60,9 @@ pipeline {
                 label 'n2u'
             }
             steps {
-                echo 'Deploying the application to n2u'
                 script {
+                    WORKSPACE_PATH = '/home/ubuntu/workspace/ansibleproject'
+                    echo 'Deploying the application to n2u'
                     unstash 'ansibleproject'
                     ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
                 }
@@ -63,8 +73,9 @@ pipeline {
                 label 'n3c'
             }
             steps {
-                echo 'Deploying the application to n3c'
                 script {
+                    WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
+                    echo 'Deploying the application to n3c'
                     unstash 'ansibleproject'
                     ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
                 }
@@ -76,16 +87,16 @@ pipeline {
             echo 'Pipeline succeeded! Send success notification.'
             script {
                 mail to: 'olawalemada@gmail.com',
-                subject: "Success: ${currentBuild.fullDisplayName}",
-                body: "Build and deployment were successful. Congratulations!"
+                     subject: "Success: ${currentBuild.fullDisplayName}",
+                     body: "Build and deployment were successful. Congratulations!"
             }
         }
         failure {
             echo 'Pipeline failed! Send failure notification.'
             script {
                 mail to: 'olawalemada@gmail.com',
-                subject: "Failed: ${currentBuild.fullDisplayName}",
-                body: "Something went wrong. Please check the build and deployment logs."
+                     subject: "Failed: ${currentBuild.fullDisplayName}",
+                     body: "Something went wrong. Please check the build and deployment logs."
             }
         }
     }
