@@ -57,6 +57,7 @@ pipeline {
                         }
                     }
                 }
+
                 stage('Copy to n2u') {
                     agent {
                         label 'n2u'
@@ -70,6 +71,7 @@ pipeline {
                         }
                     }
                 }
+
                 stage('Copy to n3c') {
                     agent {
                         label 'n3c'
@@ -92,7 +94,6 @@ pipeline {
             }
             steps {
                 script {
-                    // Start the SSH Agent and add credentials
                     sshagent(credentials: [CREDENTIALS_N1A, CREDENTIALS_N2U, CREDENTIALS_N3C]) {
                         unstash 'application'
                         unstash 'ansibleFiles'
