@@ -22,42 +22,15 @@ pipeline {
                 stash (name: 'ansibleproject', includes: "target/*.war")
             }
         }
-        stage('Deploy on Amazon') {
+        stage('Deploy') {
             agent {
-                label 'n1a'
+                label 'n1a || n2u || n3c'
             }
             steps {
-                echo 'Deploying the application to n1a'
+                echo 'Deploying the application'
                 script {
                     unstash 'ansibleproject'
-                    sh 'which ansible-playbook' // Check ansible-playbook path
-                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                }
-            }
-        }
-        stage('Deploy on Ubuntu') {
-            agent {
-                label 'n2u'
-            }
-            steps {
-                echo 'Deploying the application to n2u'
-                script {
-                    unstash 'ansibleproject'
-                    sh 'which ansible-playbook' // Check ansible-playbook path
-                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                }
-            }
-        }
-        stage('Deploy on Centos') {
-            agent {
-                label 'n3c'
-            }
-            steps {
-                echo 'Deploying the application to n3c'
-                script {
-                    unstash 'ansibleproject'
-                    sh 'which ansible-playbook' // Check ansible-playbook path
-                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                    sh 'ansible-playbook -i hosts.ini javawebansible.yml'
                 }
             }
         }
