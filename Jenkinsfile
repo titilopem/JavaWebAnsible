@@ -30,7 +30,7 @@ pipeline {
                 echo 'Deploying the application to n1a'
                 script {
                     unstash 'ansibleproject'
-                    sh '/usr/bin/ansible-playbook -i hosts.ini javawebansible.yml'
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
         }
@@ -42,7 +42,7 @@ pipeline {
                 echo 'Deploying the application to n2u'
                 script {
                     unstash 'ansibleproject'
-                    sh '/usr/bin/ansible-playbook -i hosts.ini javawebansible.yml'
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
         }
@@ -54,7 +54,7 @@ pipeline {
                 echo 'Deploying the application to n3c'
                 script {
                     unstash 'ansibleproject'
-                    sh '/usr/bin/ansible-playbook -i hosts.ini javawebansible.yml'
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
         }
