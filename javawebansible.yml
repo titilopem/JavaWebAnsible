@@ -5,10 +5,9 @@
 
   tasks:
     - name: Copy WAR file to Tomcat webapps directory
-      copy:
-        src: "{{ workspace }}/your_webapp.war"
-        dest: "{{ tomcat_webapps_path }}"
-        mode: 0644
+      ansible.builtin.copy:
+        src: "{{ WORKSPACE_PATH }}/path/on/ansible/master/application.war"
+        dest: "/path/on/target/server/application.war"
       notify:
         - Restart Tomcat
 
@@ -20,7 +19,7 @@
 
   handlers:
     - name: Restart Tomcat
-      service:
+      ansible.builtin.service:
         name: "{{ tomcat_service_name }}"
         state: restarted
 
