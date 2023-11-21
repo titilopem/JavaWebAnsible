@@ -3,6 +3,9 @@
   hosts: group1
   become: true
 
+  vars:
+    tomcat_user: root  # Set this to the user running the Tomcat process
+
   tasks:
     - name: Remove existing WAR files from Tomcat webapps directory
       ansible.builtin.shell:
