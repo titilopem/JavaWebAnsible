@@ -14,7 +14,7 @@ pipeline {
                 dir(WORKSPACE_PATH) {
                     // Fetch and stash Ansible-related files
                     checkout scm
-                    stash name: 'ansibleFiles', includes: ['*.yml', '*.ini']
+                    stash name: 'ansibleFiles', includes: '*.yml, *.ini'
                 }
             }
         }
@@ -26,7 +26,7 @@ pipeline {
             steps {
                 dir(WORKSPACE_PATH) {
                     sh '/opt/maven/bin/mvn clean package'
-                    stash name: 'webApp', includes: 'target/**/*.war'
+                    stash name: 'application', includes: 'target/**/*.war'
                 }
             }
         }
@@ -50,10 +50,9 @@ pipeline {
                 script {
                     WORKSPACE_PATH = '/home/ec2-user/workspace/ansibleproject'
                     echo 'Deploying the application to n1a'
-                    unstash 'ansibleFiles'  // Unstash Ansible-related files
-                    sh '/usr/bin/ansible-playbook -i inventory.ini javawebansible.yml'
-                    unstash 'webApp'  // Unstash web application
-                    // Copy .war file to destination on n1a
+                    unstash 'application'
+                    unstash 'ansibleFiles'
+                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
                 }
             }
         }
@@ -66,10 +65,9 @@ pipeline {
                 script {
                     WORKSPACE_PATH = '/home/ubuntu/workspace/ansibleproject'
                     echo 'Deploying the application to n2u'
-                    unstash 'ansibleFiles'  // Unstash Ansible-related files
-                    sh '/usr/bin/ansible-playbook -i inventory.ini javawebansible.yml'
-                    unstash 'webApp'  // Unstash web application
-                    // Copy .war file to destination on n2u
+                    unstash 'application'
+                    unstash 'ansibleFiles'
+                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
                 }
             }
         }
@@ -82,10 +80,9 @@ pipeline {
                 script {
                     WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
                     echo 'Deploying the application to n3c'
-                    unstash 'ansibleFiles'  // Unstash Ansible-related files
-                    sh '/usr/bin/ansible-playbook -i inventory.ini javawebansible.yml'
-                    unstash 'webApp'  // Unstash web application
-                    // Copy .war file to destination on n3c
+                    unstash 'application'
+                    unstash 'ansibleFiles'
+                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
                 }
             }
         }
