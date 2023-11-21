@@ -1,5 +1,5 @@
 pipeline {
-    agent none
+    agent any
     environment {
         SSH_KEY_N1A = credentials('n1a')  // Replace with your SSH key credential ID for n1a
         SSH_KEY_N2U = credentials('n2u')  // Replace with your SSH key credential ID for n2u
@@ -10,106 +10,84 @@ pipeline {
     }
     stages {
         stage('Checkout') {
-            agent any
             steps {
                 checkout scm
             }
         }
 
-        stage('Build on n4c') {
+        stage('Build and Test on n4c') {
             agent {
                 label 'n4c'
             }
             steps {
-                script {
-                    // Your build steps
-                    sh 'mvn clean package'
-                    stash(name: 'war', includes: 'target/*.war')
-                }
+                sh 'mvn clean package'
+                // Additional test steps if needed
             }
         }
 
-        stage('Test on n4c') {
-            agent {
-                label 'n4c'
-            }
-            steps {
-                script {
-                    // Your test steps (e.g., mvn test)
-                    sh 'mvn test'
-                }
-            }
-        }
-
-        stage('Deploy') {
+        stage('Deploy on n1a') {
             agent any
-            parallel {
-                stage('Deploy on n1a') {
-                    steps {
-                        script {
-                            unstash 'war'
-                            // Your deployment steps for n1a
-                            ansiblePlaybook(
-                                become: true,
-                                inventory: 'hosts.ini',
-                                playbook: 'javawebansible.yml',
-                                extraVars: [
-                                    war_file: 'target/*.war',
-                                    ansible_user: env.TOMCAT_USER_N1A,
-                                    ansible_ssh_private_key_file: env.SSH_KEY_N1A,
-                                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                                ]
-                            )
-                        }
-                    }
+            steps {
+                script {
+                    // Your deployment steps for n1a
+                    ansiblePlaybook(
+                        become: true,
+                        inventory: 'hosts.ini',
+                        playbook: 'javawebansible.yml',
+                        extraVars: [
+                            war_file: 'target/*.war',
+                            ansible_user: env.TOMCAT_USER_N1A,
+                            ansible_ssh_private_key_file: env.SSH_KEY_N1A,
+                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                        ]
+                    )
                 }
-                stage('Deploy on n2u') {
-                    steps {
-                        script {
-                            unstash 'war'
-                            // Your deployment steps for n2u
-                            ansiblePlaybook(
-                                become: true,
-                                inventory: 'hosts.ini',
-                                playbook: 'javawebansible.yml',
-                                extraVars: [
-                                    war_file: 'target/*.war',
-                                    ansible_user: env.TOMCAT_USER_N2U,
-                                    ansible_ssh_private_key_file: env.SSH_KEY_N2U,
-                                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                                ]
-                            )
-                        }
-                    }
+            }
+        }
+
+        stage('Deploy on n2u') {
+            agent any
+            steps {
+                script {
+                    // Your deployment steps for n2u
+                    ansiblePlaybook(
+                        become: true,
+                        inventory: 'hosts.ini',
+                        playbook: 'javawebansible.yml',
+                        extraVars: [
+                            war_file: 'target/*.war',
+                            ansible_user: env.TOMCAT_USER_N2U,
+                            ansible_ssh_private_key_file: env.SSH_KEY_N2U,
+                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                        ]
+                    )
                 }
-                stage('Deploy on n3c') {
-                    steps {
-                        script {
-                            unstash 'war'
-                            // Your deployment steps for n3c
-                            ansiblePlaybook(
-                                become: true,
-                                inventory: 'hosts.ini',
-                                playbook: 'javawebansible.yml',
-                                extraVars: [
-                                    war_file: 'target/*.war',
-                                    ansible_user: env.TOMCAT_USER_N3C,
-                                    ansible_ssh_private_key_file: env.SSH_KEY_N3C,
-                                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                                ]
-                            )
-                        }
-                    }
+            }
+        }
+
+        stage('Deploy on n3c') {
+            agent any
+            steps {
+                script {
+                    // Your deployment steps for n3c
+                    ansiblePlaybook(
+                        become: true,
+                        inventory: 'hosts.ini',
+                        playbook: 'javawebansible.yml',
+                        extraVars: [
+                            war_file: 'target/*.war',
+                            ansible_user: env.TOMCAT_USER_N3C,
+                            ansible_ssh_private_key_file: env.SSH_KEY_N3C,
+                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                        ]
+                    )
                 }
             }
         }
 
         stage('Cleanup') {
-            agent any
             steps {
-                script {
-                    deleteDir()
-                }
+                deleteDir()
             }
         }
     }
