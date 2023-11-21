@@ -30,9 +30,10 @@ pipeline {
                         playbook: 'javawebansible.yml',
                         extraVars: [
                             war_file: 'target/*.war',
-                            ansible_user: 'ec2-user', // Replace with your Amazon user
+                            ansible_user: 'ec2-user',
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ]
+                        ],
+                        credentialsId: 'n1a'
                     )
                 }
             }
@@ -49,9 +50,10 @@ pipeline {
                         playbook: 'javawebansible.yml',
                         extraVars: [
                             war_file: 'target/*.war',
-                            ansible_user: 'ubuntu', // Replace with your Ubuntu user
+                            ansible_user: 'ubuntu',
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ]
+                        ],
+                        credentialsId: 'n2u'
                     )
                 }
             }
@@ -68,9 +70,10 @@ pipeline {
                         playbook: 'javawebansible.yml',
                         extraVars: [
                             war_file: 'target/*.war',
-                            ansible_user: 'centos', // Replace with your CentOS user
+                            ansible_user: 'centos',
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ]
+                        ],
+                        credentialsId: 'n3c'
                     )
                 }
             }
