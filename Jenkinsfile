@@ -50,4 +50,86 @@ pipeline {
                             unstash 'war'
                             // Your deployment steps for n1a
                             ansiblePlaybook(
-                 
+                                become: true,
+                                inventory: 'hosts.ini',
+                                playbook: 'javawebansible.yml',
+                                extraVars: [
+                                    war_file: 'target/*.war',
+                                    ansible_user: env.TOMCAT_USER_N1A,
+                                    ansible_ssh_private_key_file: env.SSH_KEY_N1A,
+                                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                                ]
+                            )
+                        }
+                    }
+                }
+                stage('Deploy on n2u') {
+                    steps {
+                        script {
+                            unstash 'war'
+                            // Your deployment steps for n2u
+                            ansiblePlaybook(
+                                become: true,
+                                inventory: 'hosts.ini',
+                                playbook: 'javawebansible.yml',
+                                extraVars: [
+                                    war_file: 'target/*.war',
+                                    ansible_user: env.TOMCAT_USER_N2U,
+                                    ansible_ssh_private_key_file: env.SSH_KEY_N2U,
+                                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                                ]
+                            )
+                        }
+                    }
+                }
+                stage('Deploy on n3c') {
+                    steps {
+                        script {
+                            unstash 'war'
+                            // Your deployment steps for n3c
+                            ansiblePlaybook(
+                                become: true,
+                                inventory: 'hosts.ini',
+                                playbook: 'javawebansible.yml',
+                                extraVars: [
+                                    war_file: 'target/*.war',
+                                    ansible_user: env.TOMCAT_USER_N3C,
+                                    ansible_ssh_private_key_file: env.SSH_KEY_N3C,
+                                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                                ]
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Cleanup') {
+            agent any
+            steps {
+                script {
+                    deleteDir()
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline succeeded! Send success notification.'
+            script {
+                mail to: 'olawalemada@gmail.com',
+                     subject: "Success: ${currentBuild.fullDisplayName}",
+                     body: "Build, test, and deployment were successful. Congratulations!"
+            }
+        }
+        failure {
+            echo 'Pipeline failed! Send failure notification.'
+            script {
+                mail to: 'olawalemada@gmail.com',
+                     subject: "Failed: ${currentBuild.fullDisplayName}",
+                     body: "Something went wrong. Please check the build, test, and deployment logs."
+            }
+        }
+    }
+}
