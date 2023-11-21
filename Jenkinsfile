@@ -41,7 +41,32 @@ pipeline {
                 }
             }
         }
-        // Add other stages as needed
+        stage('Deploy on Ubuntu') {
+            agent {
+                label 'n2u'
+            }
+            steps {
+                script {
+                    WORKSPACE_PATH = '/home/ubuntu/workspace/ansibleproject' // Adjust the path
+                    echo 'Deploying the application to n2u'
+                    unstash 'ansibleproject'
+                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                }
+            }
+        }
+        stage('Deploy on CentOS') {
+            agent {
+                label 'n3c'
+            }
+            steps {
+                script {
+                    WORKSPACE_PATH = '/home/centos/workspace/ansibleproject' // Adjust the path
+                    echo 'Deploying the application to n3c'
+                    unstash 'ansibleproject'
+                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                }
+            }
+        }
     }
     post {
         success {
