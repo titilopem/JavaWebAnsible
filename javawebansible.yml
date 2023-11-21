@@ -1,32 +1,20 @@
 ---
 - name: Deploy Java Web Application
   hosts: group1
-  become: yes
+  become: true
 
   tasks:
     - name: Set Tomcat paths based on distribution
-      set_fact:
-        tomcat_path: >-
-          {% if ansible_distribution == 'CentOS' %}
-            /usr/local/apache-tomcat-10.1.16
-          {% elif ansible_distribution == 'Ubuntu' %}
-            /usr/local/apache-tomcat-10.1.16
-          {% elif ansible_distribution == 'Amazon' %}
-            /path/to/amazon/tomcat
-          {% else %}
-            /default/tomcat/path
-          {% endif %}
+      ansible.builtin.command:
+        cmd: mv "/usr/local/apache-tomcat-10.1.16" "/usr/local/latest"
+      when: "'/usr/local/latest' is not exists"
+      delegate_to: "{{ inventory_hostname }}"
 
     - name: Copy WAR file to Tomcat webapps directory
       ansible.builtin.copy:
-        src: "{{ WORKSPACE }}/ansibleproject/target/*.war"
-        dest: "{{ tomcat_path }}/webapps/"
-      notify:
-        - Restart Tomcat
-
-  handlers:
-    - name: Restart Tomcat
-      ansible.builtin.service:
-        name: "tomcat"  # Adjust with your actual Tomcat service name
-        state: restarted
+        src: "{{ ansible_env.WORKSPACE }}/target/*.war"
+        dest: "/usr/local/latest/webapps/"
+        remote_src: true
+      become_user: "{{ ansible_user }}"
+      delegate_to: "{{ inventory_hostname }}"
 ...
