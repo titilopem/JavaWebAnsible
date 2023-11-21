@@ -8,39 +8,14 @@ pipeline {
             }
         }
 
-        stage('Build on n4c') {
+        stage('Build and Test on n4c') {
             agent {
                 label 'n4c'
             }
             steps {
                 sh 'mvn clean package'
                 stash(name: 'war', includes: 'target/*.war')
-            }
-        }
-
-        stage('Test on n4c') {
-            agent {
-                label 'n4c'
-            }
-            steps {
-                sh 'mvn test'
-            }
-        }
-
-        stage('Deploy Tomcat on n1a') {
-            steps {
-                script {
-                    unstash 'war'
-                    ansiblePlaybook(
-                        become: true,
-                        inventory: 'hosts.ini',
-                        playbook: 'deploy_tomcat.yml',
-                        extraVars: [
-                            ansible_user: 'ec2-user', // Replace with your Amazon user
-                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ]
-                    )
-                }
+                // Additional test steps if needed
             }
         }
 
@@ -48,7 +23,6 @@ pipeline {
             steps {
                 script {
                     unstash 'war'
-                    checkout scm
 
                     ansiblePlaybook(
                         become: true,
@@ -68,7 +42,6 @@ pipeline {
             steps {
                 script {
                     unstash 'war'
-                    checkout scm
 
                     ansiblePlaybook(
                         become: true,
@@ -88,7 +61,6 @@ pipeline {
             steps {
                 script {
                     unstash 'war'
-                    checkout scm
 
                     ansiblePlaybook(
                         become: true,
@@ -104,6 +76,7 @@ pipeline {
             }
         }
     }
+
     post {
         success {
             echo 'Pipeline succeeded! Send success notification.'
