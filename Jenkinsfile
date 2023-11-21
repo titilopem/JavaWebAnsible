@@ -1,14 +1,28 @@
 pipeline {
-    agent {
-        label 'n4c'
-    }
+    agent none
 
     environment {
         WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
     }
 
     stages {
+        stage('Fetch Ansible Files') {
+            agent {
+                label 'n4c'
+            }
+            steps {
+                dir(WORKSPACE_PATH) {
+                    // Fetch and stash Ansible-related files from Git
+                    checkout scm
+                    stash name: 'ansibleFiles', includes: '*.yml, *.ini'
+                }
+            }
+        }
+
         stage('Build and Test') {
+            agent {
+                label 'n4c'
+            }
             steps {
                 dir(WORKSPACE_PATH) {
                     // Build and test your web application on n4c
@@ -18,55 +32,70 @@ pipeline {
             }
         }
 
-        stage('Fetch Ansible Files') {
-            steps {
-                dir(WORKSPACE_PATH) {
-                    // Fetch and stash Ansible-related files from Git
-                    checkout scm
-                    stash name: 'ansibleFiles', includes: 'javawebansible.yml, hosts.ini'
-                }
-            }
-        }
-
-        stage('Deploy to Nodes') {
+        stage('Copy Web App to Nodes') {
             parallel {
-                stage('Deploy to n1a') {
+                stage('Copy to n1a') {
                     agent {
                         label 'n1a'
                     }
                     steps {
+                        // Copy the web app to n1a
                         script {
-                            echo 'Deploying the application to n1a'
+                            echo 'Copying the application to n1a'
                             unstash 'application'
-                            unstash 'ansibleFiles'
-                            ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                            dir(WORKSPACE_PATH) {
+                                unstash 'ansibleFiles'
+                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n1a']
+                            }
                         }
                     }
                 }
-                stage('Deploy to n2u') {
+                stage('Copy to n2u') {
                     agent {
                         label 'n2u'
                     }
                     steps {
+                        // Copy the web app to n2u
                         script {
-                            echo 'Deploying the application to n2u'
+                            echo 'Copying the application to n2u'
                             unstash 'application'
-                            unstash 'ansibleFiles'
-                            ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                            dir(WORKSPACE_PATH) {
+                                unstash 'ansibleFiles'
+                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n2u']
+                            }
                         }
                     }
                 }
-                stage('Deploy to n3c') {
+                stage('Copy to n3c') {
                     agent {
                         label 'n3c'
                     }
                     steps {
+                        // Copy the web app to n3c
                         script {
-                            echo 'Deploying the application to n3c'
+                            echo 'Copying the application to n3c'
                             unstash 'application'
-                            unstash 'ansibleFiles'
-                            ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                            dir(WORKSPACE_PATH) {
+                                unstash 'ansibleFiles'
+                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n3c']
+                            }
                         }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy with Ansible') {
+            agent {
+                label 'n4c'
+            }
+            steps {
+                script {
+                    // Run Ansible playbook on n4c
+                    unstash 'application'
+                    dir(WORKSPACE_PATH) {
+                        unstash 'ansibleFiles'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                     }
                 }
             }
