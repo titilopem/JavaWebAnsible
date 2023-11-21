@@ -1,54 +1,61 @@
 pipeline {
     agent none
     stages {
-        stage('Build and Test') {
+        stage('Build') {
             agent {
                 label 'node4u'
             }
             steps {
                 echo 'Building the application'
+                // Define build steps here
                 sh '/opt/maven/bin/mvn clean package'
-                stash (name: 'projectansible', includes: ["target/*.war", "deploy_webapp.yml"])
-
-                echo 'Running tests'
-                sh '/opt/maven/bin/mvn test'
             }
         }
-        stage('Deploy') {
-            parallel {
-                stage('node1a') {
+        stage('Test') {
+            agent {
+                label 'node4u'
+            }
+            steps {
+                echo 'Running tests'
+                // Define test steps here
+                sh 'mvn test'
+                stash (name: 'ansibleproject', includes: "target/*.war")
+            }
+        }
+        stage('Deploy on Amazon') {
                     agent {
                         label 'node1a'
                     }
                     steps {
                         echo 'Deploying the application to node1a'
                         script {
-                            unstash 'projectansible'
-                            ansiblePlaybook playbook: 'deploy_webapp.yml', inventory: 'inventory-node1.ini'
+                            unstash 'ansibleproject'
+                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                        }
                         }
                     }
                 }
-                stage('node2u') {
+                stage('Deploy on Ubuntu') {
                     agent {
                         label 'node2u'
                     }
                     steps {
                         echo 'Deploying the application to node2u'
                         script {
-                            unstash 'projectansible'
-                            ansiblePlaybook playbook: 'deploy_webapp.yml', inventory: 'inventory-node2.ini'
+                            unstash 'ansibleproject'
+                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                         }
                     }
                 }
-                stage('node3c') {
+                stage('Deploy on Centos') {
                     agent {
                         label 'node3c'
                     }
                     steps {
                         echo 'Deploying the application to node3c'
                         script {
-                            unstash 'projectansible'
-                            ansiblePlaybook playbook: 'deploy_webapp.yml', inventory: 'inventory-node3.ini'
+                            unstash 'ansibleproject'
+                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                         }
                     }
                 }
