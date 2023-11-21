@@ -34,7 +34,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to n1a') {
+        stage('Deploy on n1a') {
             agent {
                 label 'n1a'
             }
@@ -49,7 +49,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to n2u') {
+        stage('Deploy on n2u') {
             agent {
                 label 'n2u'
             }
@@ -64,7 +64,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to n3c') {
+        stage('Deploy on n3c') {
             agent {
                 label 'n3c'
             }
