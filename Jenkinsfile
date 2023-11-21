@@ -16,15 +16,27 @@ pipeline {
             }
         }
 
-        stage('Build and Test on n4c') {
+        stage('Build on n4c') {
             agent {
                 label 'n4c'
             }
             steps {
                 script {
-                    // Your build and test steps
+                    // Your build steps
                     sh 'mvn clean package'
                     stash(name: 'war', includes: 'target/*.war')
+                }
+            }
+        }
+
+        stage('Test on n4c') {
+            agent {
+                label 'n4c'
+            }
+            steps {
+                script {
+                    // Your test steps (e.g., mvn test)
+                    sh 'mvn test'
                 }
             }
         }
