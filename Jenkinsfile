@@ -17,23 +17,16 @@ pipeline {
             }
         }
         stage('Deploy') {
-            agent none
-            steps {
-                echo 'Deploying the application'
-                script {
-                    // Use Ansible to deploy the application across three nodes
-                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                }
-            }
             parallel {
                 stage('node1a') {
                     agent {
                         label 'node1a'
                     }
                     steps {
+                        echo 'Deploying the application to node1a'
                         script {
                             unstash 'projectansible'
-                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                            ansiblePlaybook playbook: 'deploy_webapp.yml', inventory: 'inventory-node1.ini'
                         }
                     }
                 }
@@ -42,9 +35,10 @@ pipeline {
                         label 'node2u'
                     }
                     steps {
+                        echo 'Deploying the application to node2u'
                         script {
                             unstash 'projectansible'
-                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                            ansiblePlaybook playbook: 'deploy_webapp.yml', inventory: 'inventory-node2.ini'
                         }
                     }
                 }
@@ -53,9 +47,10 @@ pipeline {
                         label 'node3c'
                     }
                     steps {
+                        echo 'Deploying the application to node3c'
                         script {
                             unstash 'projectansible'
-                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                            ansiblePlaybook playbook: 'deploy_webapp.yml', inventory: 'inventory-node3.ini'
                         }
                     }
                 }
