@@ -30,6 +30,7 @@ pipeline {
         stage('Deploy Tomcat on n1a') {
             steps {
                 script {
+                    unstash 'war'
                     ansiblePlaybook(
                         become: true,
                         inventory: 'hosts.ini',
@@ -47,7 +48,8 @@ pipeline {
             steps {
                 script {
                     unstash 'war'
-                    
+                    checkout scm
+
                     ansiblePlaybook(
                         become: true,
                         inventory: 'hosts.ini',
@@ -66,14 +68,15 @@ pipeline {
             steps {
                 script {
                     unstash 'war'
-                    
+                    checkout scm
+
                     ansiblePlaybook(
                         become: true,
                         inventory: 'hosts.ini',
                         playbook: 'javawebansible.yml',
                         extraVars: [
                             war_file: 'target/*.war',
-                            ansible_user: 'ubuntu-user', // Replace with your Ubuntu user
+                            ansible_user: 'ubuntu', // Replace with your Ubuntu user
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
                         ]
                     )
@@ -85,14 +88,15 @@ pipeline {
             steps {
                 script {
                     unstash 'war'
-                    
+                    checkout scm
+
                     ansiblePlaybook(
                         become: true,
                         inventory: 'hosts.ini',
                         playbook: 'javawebansible.yml',
                         extraVars: [
                             war_file: 'target/*.war',
-                            ansible_user: 'centos-user', // Replace with your CentOS user
+                            ansible_user: 'centos', // Replace with your CentOS user
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
                         ]
                     )
