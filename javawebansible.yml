@@ -7,14 +7,43 @@
     - name: Copy WAR file to Tomcat server
       copy:
         src: "/var/jenkins_home/jobs/projectansible/workspace/projectansible/target/*.war"
-        dest: "/path/to/tomcat/webapps/your_webapp.war"
+        dest: "{{ tomcat_webapps_path }}/your_webapp.war"
         mode: 0644
       notify:
         - Restart Tomcat
 
+    - name: Enable and start Tomcat service
+      service:
+        name: "{{ tomcat_service_name }}"
+        enabled: yes
+        state: started
+
   handlers:
     - name: Restart Tomcat
       service:
-        name: "tomcat"
+        name: "{{ tomcat_service_name }}"
         state: restarted
+
+  vars:
+    tomcat_webapps_path: "/usr/share/tomcat/webapps"  # Default path for most distributions
+    tomcat_service_name: "tomcat"                    # Default service name for most distributions
+
+    # Override defaults for specific distributions
+    - name: Override variables for CentOS
+      set_fact:
+        tomcat_webapps_path: "/usr/share/tomcat/webapps"
+        tomcat_service_name: "tomcat"
+      when: ansible_distribution == 'CentOS'
+
+    - name: Override variables for Ubuntu
+      set_fact:
+        tomcat_webapps_path: "/var/lib/tomcat/webapps"
+        tomcat_service_name: "tomcat"
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Override variables for Amazon Linux
+      set_fact:
+        tomcat_webapps_path: "/usr/share/tomcat/webapps"
+        tomcat_service_name: "tomcat"
+      when: ansible_distribution == 'Amazon'
 ...
