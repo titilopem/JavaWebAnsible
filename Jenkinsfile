@@ -1,44 +1,42 @@
 pipeline {
-    agent none
+    agent any
+
     environment {
-        WORKSPACE_PATH = ''
+        WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
     }
+
     stages {
         stage('Fetch Ansible Files') {
             agent {
                 label 'n4c'
             }
             steps {
-                script {
-                    WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
-                    echo 'Fetching Ansible files from GitHub'
-                    dir(WORKSPACE_PATH) {
-                        checkout scm
-                    }
+                dir(WORKSPACE_PATH) {
+                    stash name: 'ansibleproject', includes: '**/*'
                 }
             }
         }
+
         stage('Build') {
             agent {
                 label 'n4c'
             }
             steps {
-                script {
-                    WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
-                    echo 'Building the application'
+                dir(WORKSPACE_PATH) {
                     sh '/opt/maven/bin/mvn clean package'
+                    stash name: 'ansibleproject', includes: 'target/**/*.war'
                 }
             }
         }
+
         stage('Test') {
             agent {
                 label 'n4c'
             }
             steps {
-                script {
-                    echo 'Running tests'
+                dir(WORKSPACE_PATH) {
                     sh 'mvn test'
-                    stash (name: 'ansibleproject', includes: "${WORKSPACE_PATH}/target/*.war")
+                    stash name: 'ansibleproject', includes: 'target/**/*.war'
                 }
             }
         }
