@@ -1,24 +1,32 @@
 ---
 - name: Deploy Java Web Application
-  hosts: "{{ target_node }}"
+  hosts: group1
   become: yes
 
-  vars:
-    webapp_source_path: "/home/centos/workspace/ansibleproject/target/path/on/ansible/master/application.war"
-    webapp_dest_path: "/path/on/target/server/application.war"
-    tomcat_service_name: "tomcat"  # Adjust with your actual Tomcat service name
-
   tasks:
+    - name: Set Tomcat paths based on distribution
+      set_fact:
+        tomcat_path: >-
+          {% if ansible_distribution == 'CentOS' %}
+            /usr/local/apache-tomcat-10.1.16
+          {% elif ansible_distribution == 'Ubuntu' %}
+            /usr/local/apache-tomcat-10.1.16
+          {% elif ansible_distribution == 'Amazon' %}
+            /path/to/amazon/tomcat
+          {% else %}
+            /default/tomcat/path
+          {% endif %}
+
     - name: Copy WAR file to Tomcat webapps directory
       ansible.builtin.copy:
-        src: "{{ webapp_source_path }}"
-        dest: "{{ webapp_dest_path }}"
+        src: "{{ workspace_path }}/target/*.war"
+        dest: "{{ tomcat_path }}/webapps/"
       notify:
         - Restart Tomcat
 
   handlers:
     - name: Restart Tomcat
       ansible.builtin.service:
-        name: "{{ tomcat_service_name }}"
+        name: "tomcat"  # Adjust with your actual Tomcat service name
         state: restarted
 ...
