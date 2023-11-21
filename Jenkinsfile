@@ -39,14 +39,11 @@ pipeline {
                         label 'n1a'
                     }
                     steps {
-                        // Copy the web app to n1a
                         script {
                             echo 'Copying the application to n1a'
                             unstash 'application'
-                            dir(WORKSPACE_PATH) {
-                                unstash 'ansibleFiles'
-                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n1a']
-                            }
+                            unstash 'ansibleFiles'
+                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n1a']
                         }
                     }
                 }
@@ -55,14 +52,11 @@ pipeline {
                         label 'n2u'
                     }
                     steps {
-                        // Copy the web app to n2u
                         script {
                             echo 'Copying the application to n2u'
                             unstash 'application'
-                            dir(WORKSPACE_PATH) {
-                                unstash 'ansibleFiles'
-                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n2u']
-                            }
+                            unstash 'ansibleFiles'
+                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n2u']
                         }
                     }
                 }
@@ -71,14 +65,11 @@ pipeline {
                         label 'n3c'
                     }
                     steps {
-                        // Copy the web app to n3c
                         script {
                             echo 'Copying the application to n3c'
                             unstash 'application'
-                            dir(WORKSPACE_PATH) {
-                                unstash 'ansibleFiles'
-                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n3c']
-                            }
+                            unstash 'ansibleFiles'
+                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n3c']
                         }
                     }
                 }
@@ -93,10 +84,8 @@ pipeline {
                 script {
                     // Run Ansible playbook on n4c
                     unstash 'application'
-                    dir(WORKSPACE_PATH) {
-                        unstash 'ansibleFiles'
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                    }
+                    unstash 'ansibleFiles'
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
         }
