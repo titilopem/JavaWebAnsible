@@ -7,12 +7,10 @@ pipeline {
             }
             steps {
                 echo 'Building the application'
-                // Define build steps here
                 sh '/opt/maven/bin/mvn clean package'
                 stash (name: 'projectansible', includes: ["target/*.war", "deploy_webapp.yml"])
 
                 echo 'Running tests'
-                // Define test steps here
                 sh '/opt/maven/bin/mvn test'
             }
         }
@@ -72,7 +70,7 @@ pipeline {
                 mail to: 'olawalemada@gmail.com',
                     subject: "Failed: ${currentBuild.fullDisplayName}",
                     body: "Something went wrong. Please check the build and deployment logs."
-            }  
+            }
         }
     }
 }
