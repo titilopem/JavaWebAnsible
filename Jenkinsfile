@@ -1,6 +1,13 @@
 pipeline {
-    agent any
-
+    agent none
+    environment {
+        SSH_KEY_N1A = credentials('n1a')  // Replace with your SSH key credential ID for n1a
+        SSH_KEY_N2U = credentials('n2u')  // Replace with your SSH key credential ID for n2u
+        SSH_KEY_N3C = credentials('n3c')  // Replace with your SSH key credential ID for n3c
+        TOMCAT_USER_N1A = 'ec2-user'  // Update with the appropriate Tomcat user for n1a
+        TOMCAT_USER_N2U = 'ubuntu'    // Update with the appropriate Tomcat user for n2u
+        TOMCAT_USER_N3C = 'centos'    // Update with the appropriate Tomcat user for n3c
+    }
     stages {
         stage('Checkout') {
             steps {
@@ -30,10 +37,10 @@ pipeline {
                         playbook: 'javawebansible.yml',
                         extraVars: [
                             war_file: 'target/*.war',
-                            ansible_user: 'ec2-user',
+                            ansible_user: env.TOMCAT_USER_N1A,
+                            ansible_ssh_private_key_file: env.SSH_KEY_N1A,
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ],
-                        credentialsId: 'n1a'
+                        ]
                     )
                 }
             }
@@ -50,10 +57,10 @@ pipeline {
                         playbook: 'javawebansible.yml',
                         extraVars: [
                             war_file: 'target/*.war',
-                            ansible_user: 'ubuntu',
+                            ansible_user: env.TOMCAT_USER_N2U,
+                            ansible_ssh_private_key_file: env.SSH_KEY_N2U,
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ],
-                        credentialsId: 'n2u'
+                        ]
                     )
                 }
             }
@@ -70,10 +77,10 @@ pipeline {
                         playbook: 'javawebansible.yml',
                         extraVars: [
                             war_file: 'target/*.war',
-                            ansible_user: 'centos',
+                            ansible_user: env.TOMCAT_USER_N3C,
+                            ansible_ssh_private_key_file: env.SSH_KEY_N3C,
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ],
-                        credentialsId: 'n3c'
+                        ]
                     )
                 }
             }
