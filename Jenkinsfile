@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Build') {
             agent {
-                label 'node4c'
+                label 'n4c'
             }
             steps {
                 echo 'Building the application'
@@ -13,7 +13,7 @@ pipeline {
         }
         stage('Test') {
             agent {
-                label 'node4c'
+                label 'n4c'
             }
             steps {
                 echo 'Running tests'
@@ -24,10 +24,10 @@ pipeline {
         }
         stage('Deploy on Amazon') {
             agent {
-                label 'node1a'
+                label 'n1a'
             }
             steps {
-                echo 'Deploying the application to node1a'
+                echo 'Deploying the application to n1a'
                 script {
                     unstash 'ansibleproject'
                     ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
@@ -36,10 +36,10 @@ pipeline {
         }
         stage('Deploy on Ubuntu') {
             agent {
-                label 'node2u'
+                label 'n2u'
             }
             steps {
-                echo 'Deploying the application to node2u'
+                echo 'Deploying the application to n2u'
                 script {
                     unstash 'ansibleproject'
                     ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
@@ -48,10 +48,10 @@ pipeline {
         }
         stage('Deploy on Centos') {
             agent {
-                label 'node3c'
+                label 'n3c'
             }
             steps {
-                echo 'Deploying the application to node3c'
+                echo 'Deploying the application to n3c'
                 script {
                     unstash 'ansibleproject'
                     ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
