@@ -1,7 +1,7 @@
 pipeline {
     agent none
     environment {
-        PATH = "/usr/bin:$PATH"
+        WORKSPACE_PATH = ''
     }
     stages {
         stage('Build') {
@@ -9,9 +9,11 @@ pipeline {
                 label 'n4c'
             }
             steps {
-                echo 'Building the application'
-                // Define build steps here
-                sh '/opt/maven/bin/mvn clean package'
+                script {
+                    WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
+                    echo 'Building the application'
+                    sh '/opt/maven/bin/mvn clean package'
+                }
             }
         }
         stage('Test') {
@@ -19,10 +21,11 @@ pipeline {
                 label 'n4c'
             }
             steps {
-                echo 'Running tests'
-                // Define test steps here
-                sh 'mvn test'
-                stash (name: 'ansibleproject', includes: "target/*.war")
+                script {
+                    echo 'Running tests'
+                    sh 'mvn test'
+                    stash (name: 'ansibleproject', includes: "${WORKSPACE_PATH}/target/*.war")
+                }
             }
         }
         stage('Deploy on Amazon') {
@@ -30,37 +33,15 @@ pipeline {
                 label 'n1a'
             }
             steps {
-                echo 'Deploying the application to n1a'
                 script {
+                    WORKSPACE_PATH = '/home/ec2-user/workspace/ansibleproject'
+                    echo 'Deploying the application to n1a'
                     unstash 'ansibleproject'
-                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
                 }
             }
         }
-        stage('Deploy on Ubuntu') {
-            agent {
-                label 'n2u'
-            }
-            steps {
-                echo 'Deploying the application to n2u'
-                script {
-                    unstash 'ansibleproject'
-                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                }
-            }
-        }
-        stage('Deploy on Centos') {
-            agent {
-                label 'n3c'
-            }
-            steps {
-                echo 'Deploying the application to n3c'
-                script {
-                    unstash 'ansibleproject'
-                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                }
-            }
-        }
+        // Add other stages as needed
     }
     post {
         success {
