@@ -4,17 +4,29 @@
   become: true
 
   tasks:
-    - name: Set Tomcat paths based on distribution
-      ansible.builtin.command:
-        cmd: mv "/usr/local/apache-tomcat-10.1.16" "/usr/local/latest"
-      when: "'/usr/local/latest' is not exists"
-      delegate_to: "{{ inventory_hostname }}"
+    - name: Copy WAR file to the deployment directory
+      copy:
+        src: "{{ war_file }}"
+        dest: "/path/to/deployment/directory/your_app.war"
+      notify:
+        - Restart Tomcat
 
-    - name: Copy WAR file to Tomcat webapps directory
-      ansible.builtin.copy:
-        src: "{{ ansible_env.WORKSPACE }}/target/*.war"
-        dest: "/usr/local/latest/webapps/"
-        remote_src: true
-      become_user: "{{ ansible_user }}"
-      delegate_to: "{{ inventory_hostname }}"
+  handlers:
+    - name: Restart Tomcat
+      systemd:
+        name: tomcat
+        state: restarted
+      when: ansible_os_family == 'RedHat'
+
+    - name: Restart Tomcat
+      systemd:
+        name: tomcat
+        state: restarted
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Restart Tomcat
+      service:
+        name: tomcat
+        state: restarted
+      when: ansible_distribution == 'Amazon'
 ...
