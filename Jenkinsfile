@@ -2,7 +2,6 @@ pipeline {
     agent none
 
     environment {
-        WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
         CREDENTIALS_N4C = 'n4c'
         CREDENTIALS_N1A = 'n1a'
         CREDENTIALS_N2U = 'n2u'
@@ -15,7 +14,7 @@ pipeline {
                 label 'n4c'
             }
             steps {
-                dir(WORKSPACE_PATH) {
+                dir('/home/centos/workspace/ansibleproject') {
                     checkout scm
                     sh '/opt/maven/bin/mvn clean package'
                     stash name: 'application', includes: 'target/**/*.war'
@@ -29,7 +28,7 @@ pipeline {
                 label 'n4c'
             }
             steps {
-                dir(WORKSPACE_PATH) {
+                dir('/home/centos/workspace/ansibleproject') {
                     sh '/opt/maven/bin/mvn test'
                 }
             }
@@ -44,7 +43,7 @@ pipeline {
                     unstash 'application'
                     unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N1A]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [workspace_path: '/home/centos/workspace/ansibleproject']
                     }
                 }
             }
@@ -59,7 +58,7 @@ pipeline {
                     unstash 'application'
                     unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N2U]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [workspace_path: '/home/centos/workspace/ansibleproject']
                     }
                 }
             }
@@ -74,7 +73,7 @@ pipeline {
                     unstash 'application'
                     unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N3C]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [workspace_path: '/home/centos/workspace/ansibleproject']
                     }
                 }
             }
