@@ -3,16 +3,16 @@ pipeline {
 
     environment {
         WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
+        CREDENTIALS_N1A = 'n1a'
+        CREDENTIALS_N2U = 'n2u'
+        CREDENTIALS_N3C = 'n3c'
     }
 
     stages {
-        stage('Print Environment Variables') {
-            agent {
-                label 'n4c'
-            }
+        stage('Start SSH Agent for n1a') {
+            agent any
             steps {
-                script {
-                    echo 'Printing environment variables...'
+                sshagent(credentials: [CREDENTIALS_N1A]) {
                     sh 'env'
                 }
             }
@@ -24,7 +24,6 @@ pipeline {
             }
             steps {
                 dir(WORKSPACE_PATH) {
-                    // Fetch and stash Ansible-related files from Git
                     checkout scm
                     stash name: 'ansibleFiles', includes: '*.yml, *.ini'
                 }
@@ -37,7 +36,6 @@ pipeline {
             }
             steps {
                 dir(WORKSPACE_PATH) {
-                    // Build and test your web application on n4c
                     sh '/opt/maven/bin/mvn clean package'
                     stash name: 'application', includes: 'target/**/*.war'
                 }
@@ -89,53 +87,16 @@ pipeline {
         }
 
         stage('Deploy with Ansible') {
-            parallel {
-                stage('Deploy to n1a') {
-                    agent {
-                        label 'n1a'
-                    }
-                    steps {
-                        script {
-                            // Start the SSH Agent and add credentials
-                            sshagent(credentials: ['n1a']) {
-                                // Run Ansible playbook on n1a
-                                unstash 'application'
-                                unstash 'ansibleFiles'
-                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                            }
-                        }
-                    }
-                }
-                stage('Deploy to n2u') {
-                    agent {
-                        label 'n2u'
-                    }
-                    steps {
-                        script {
-                            // Start the SSH Agent and add credentials
-                            sshagent(credentials: ['n2u']) {
-                                // Run Ansible playbook on n2u
-                                unstash 'application'
-                                unstash 'ansibleFiles'
-                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                            }
-                        }
-                    }
-                }
-                stage('Deploy to n3c') {
-                    agent {
-                        label 'n3c'
-                    }
-                    steps {
-                        script {
-                            // Start the SSH Agent and add credentials
-                            sshagent(credentials: ['n3c']) {
-                                // Run Ansible playbook on n3c
-                                unstash 'application'
-                                unstash 'ansibleFiles'
-                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                            }
-                        }
+            agent {
+                label 'n4c'
+            }
+            steps {
+                script {
+                    // Start the SSH Agent and add credentials
+                    sshagent(credentials: [CREDENTIALS_N1A, CREDENTIALS_N2U, CREDENTIALS_N3C]) {
+                        unstash 'application'
+                        unstash 'ansibleFiles'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                     }
                 }
             }
