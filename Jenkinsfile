@@ -9,80 +9,71 @@ pipeline {
     }
 
     stages {
-        stage('Build and Test') {
+        stage('Build') {
             agent {
                 label 'n4c'
             }
             steps {
                 dir(WORKSPACE_PATH) {
+                    checkout scm
                     sh '/opt/maven/bin/mvn clean package'
                     stash name: 'application', includes: 'target/**/*.war'
+                    stash name: 'ansibleFiles', includes: '*.yml, *.ini'
                 }
             }
         }
 
-        stage('Copy Web App to Nodes') {
-            steps {
-                script {
-                    echo 'Copying the application to nodes'
-                }
-            }
-
-            parallel {
-                stage('Copy to n1a') {
-                    agent {
-                        label 'n1a'
-                    }
-                    steps {
-                        script {
-                            echo 'Copying the application to n1a'
-                            unstash 'application'
-                            unstash 'ansibleFiles'
-                            // Your copy logic to n1a here
-                        }
-                    }
-                }
-
-                stage('Copy to n2u') {
-                    agent {
-                        label 'n2u'
-                    }
-                    steps {
-                        script {
-                            echo 'Copying the application to n2u'
-                            unstash 'application'
-                            unstash 'ansibleFiles'
-                            // Your copy logic to n2u here
-                        }
-                    }
-                }
-
-                stage('Copy to n3c') {
-                    agent {
-                        label 'n3c'
-                    }
-                    steps {
-                        script {
-                            echo 'Copying the application to n3c'
-                            unstash 'application'
-                            unstash 'ansibleFiles'
-                            // Your copy logic to n3c here
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy with Ansible') {
+        stage('Test') {
             agent {
                 label 'n4c'
             }
             steps {
+                dir(WORKSPACE_PATH) {
+                    sh '/opt/maven/bin/mvn test'
+                }
+            }
+        }
+
+        stage('Deploy to n1a') {
+            agent {
+                label 'n1a'
+            }
+            steps {
                 script {
-                    sshagent(credentials: [CREDENTIALS_N1A, CREDENTIALS_N2U, CREDENTIALS_N3C]) {
+                    sshagent(credentials: [CREDENTIALS_N1A]) {
                         unstash 'application'
                         unstash 'ansibleFiles'
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n1a']
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to n2u') {
+            agent {
+                label 'n2u'
+            }
+            steps {
+                script {
+                    sshagent(credentials: [CREDENTIALS_N2U]) {
+                        unstash 'application'
+                        unstash 'ansibleFiles'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n2u']
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to n3c') {
+            agent {
+                label 'n3c'
+            }
+            steps {
+                script {
+                    sshagent(credentials: [CREDENTIALS_N3C]) {
+                        unstash 'application'
+                        unstash 'ansibleFiles'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n3c']
                     }
                 }
             }
@@ -95,7 +86,7 @@ pipeline {
             script {
                 mail to: 'olawalemada@gmail.com',
                      subject: "Success: ${currentBuild.fullDisplayName}",
-                     body: "Build and deployment were successful. Congratulations!"
+                     body: "Build, test, and deployment were successful. Congratulations!"
             }
         }
         failure {
@@ -103,7 +94,7 @@ pipeline {
             script {
                 mail to: 'olawalemada@gmail.com',
                      subject: "Failed: ${currentBuild.fullDisplayName}",
-                     body: "Something went wrong. Please check the build and deployment logs."
+                     body: "Something went wrong. Please check the build, test, and deployment logs."
             }
         }
     }
