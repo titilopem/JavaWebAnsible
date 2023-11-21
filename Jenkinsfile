@@ -1,5 +1,8 @@
 pipeline {
     agent none
+    environment {
+        ANSIBLE_PATH = '/usr/bin'
+    }
     stages {
         stage('Build') {
             agent {
@@ -7,7 +10,6 @@ pipeline {
             }
             steps {
                 echo 'Building the application'
-                // Define build steps here
                 sh '/opt/maven/bin/mvn clean package'
             }
         }
@@ -17,20 +19,49 @@ pipeline {
             }
             steps {
                 echo 'Running tests'
-                // Define test steps here
                 sh 'mvn test'
-                stash (name: 'ansibleproject', includes: "target/*.war")
+                stash(name: 'ansibleproject', includes: "target/*.war")
             }
         }
-        stage('Deploy') {
+        stage('Deploy on Amazon') {
             agent {
-                label 'n1a || n2u || n3c'
+                label 'n1a'
             }
             steps {
-                echo 'Deploying the application'
+                echo 'Deploying the application to n1a'
                 script {
                     unstash 'ansibleproject'
-                    sh 'ansible-playbook -i hosts.ini javawebansible.yml'
+                    withEnv(["PATH+ANSIBLE=${ANSIBLE_PATH}"]) {
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                    }
+                }
+            }
+        }
+        stage('Deploy on Ubuntu') {
+            agent {
+                label 'n2u'
+            }
+            steps {
+                echo 'Deploying the application to n2u'
+                script {
+                    unstash 'ansibleproject'
+                    withEnv(["PATH+ANSIBLE=${ANSIBLE_PATH}"]) {
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                    }
+                }
+            }
+        }
+        stage('Deploy on Centos') {
+            agent {
+                label 'n3c'
+            }
+            steps {
+                echo 'Deploying the application to n3c'
+                script {
+                    unstash 'ansibleproject'
+                    withEnv(["PATH+ANSIBLE=${ANSIBLE_PATH}"]) {
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                    }
                 }
             }
         }
