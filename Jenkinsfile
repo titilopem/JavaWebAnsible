@@ -22,7 +22,12 @@ pipeline {
         }
 
         stage('Copy Web App to Nodes') {
-            dependsOn 'Build and Test'
+            steps {
+                script {
+                    echo 'Copying the application to nodes'
+                }
+            }
+
             parallel {
                 stage('Copy to n1a') {
                     agent {
@@ -69,7 +74,6 @@ pipeline {
         }
 
         stage('Deploy with Ansible') {
-            dependsOn 'Copy Web App to Nodes'
             agent {
                 label 'n4c'
             }
