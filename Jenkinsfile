@@ -23,41 +23,38 @@ pipeline {
             }
         }
         stage('Deploy on Amazon') {
-                    agent {
-                        label 'node1a'
-                    }
-                    steps {
-                        echo 'Deploying the application to node1a'
-                        script {
-                            unstash 'ansibleproject'
-                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                        }
-                        }
-                    }
+            agent {
+                label 'node1a'
+            }
+            steps {
+                echo 'Deploying the application to node1a'
+                script {
+                    unstash 'ansibleproject'
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
-                stage('Deploy on Ubuntu') {
-                    agent {
-                        label 'node2u'
-                    }
-                    steps {
-                        echo 'Deploying the application to node2u'
-                        script {
-                            unstash 'ansibleproject'
-                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                        }
-                    }
+            }
+        }
+        stage('Deploy on Ubuntu') {
+            agent {
+                label 'node2u'
+            }
+            steps {
+                echo 'Deploying the application to node2u'
+                script {
+                    unstash 'ansibleproject'
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
-                stage('Deploy on Centos') {
-                    agent {
-                        label 'node3c'
-                    }
-                    steps {
-                        echo 'Deploying the application to node3c'
-                        script {
-                            unstash 'ansibleproject'
-                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                        }
-                    }
+            }
+        }
+        stage('Deploy on Centos') {
+            agent {
+                label 'node3c'
+            }
+            steps {
+                echo 'Deploying the application to node3c'
+                script {
+                    unstash 'ansibleproject'
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
         }
@@ -67,16 +64,16 @@ pipeline {
             echo 'Pipeline succeeded! Send success notification.'
             script {
                 mail to: 'olawalemada@gmail.com',
-                    subject: "Success: ${currentBuild.fullDisplayName}",
-                    body: "Build and deployment were successful. Congratulations!"
+                subject: "Success: ${currentBuild.fullDisplayName}",
+                body: "Build and deployment were successful. Congratulations!"
             }
         }
         failure {
             echo 'Pipeline failed! Send failure notification.'
             script {
                 mail to: 'olawalemada@gmail.com',
-                    subject: "Failed: ${currentBuild.fullDisplayName}",
-                    body: "Something went wrong. Please check the build and deployment logs."
+                subject: "Failed: ${currentBuild.fullDisplayName}",
+                body: "Something went wrong. Please check the build and deployment logs."
             }
         }
     }
