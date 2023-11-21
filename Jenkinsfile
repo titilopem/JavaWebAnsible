@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
+        CREDENTIALS_N4C = 'n4c'
         CREDENTIALS_N1A = 'n1a'
         CREDENTIALS_N2U = 'n2u'
         CREDENTIALS_N3C = 'n3c'
@@ -40,10 +41,10 @@ pipeline {
             }
             steps {
                 script {
+                    unstash 'application'
+                    unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N1A]) {
-                        unstash 'application'
-                        unstash 'ansibleFiles'
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n1a']
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                     }
                 }
             }
@@ -55,10 +56,10 @@ pipeline {
             }
             steps {
                 script {
+                    unstash 'application'
+                    unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N2U]) {
-                        unstash 'application'
-                        unstash 'ansibleFiles'
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n2u']
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                     }
                 }
             }
@@ -70,10 +71,10 @@ pipeline {
             }
             steps {
                 script {
+                    unstash 'application'
+                    unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N3C]) {
-                        unstash 'application'
-                        unstash 'ansibleFiles'
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n3c']
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                     }
                 }
             }
