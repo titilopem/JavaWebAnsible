@@ -1,7 +1,7 @@
 pipeline {
     agent none
     stages {
-        stage('Build') {
+        stage('Build and Test') {
             agent {
                 label 'node4u'
             }
@@ -9,32 +9,56 @@ pipeline {
                 echo 'Building the application'
                 // Define build steps here
                 sh '/opt/maven/bin/mvn clean package'
-            }
-        }
-        stage('Test') {
-            agent {
-                label 'node4u'
-            }
-            steps {
+                stash (name: 'projectansible', includes: ["target/*.war", "deploy_webapp.yml"])
+
                 echo 'Running tests'
                 // Define test steps here
                 sh '/opt/maven/bin/mvn test'
-                stash (name: 'projectansible', includes: "target/*.war")
             }
         }
         stage('Deploy') {
-            agent {
-                label 'node2u'
-            }
+            agent none
             steps {
                 echo 'Deploying the application'
-                // Define deployment steps here
-                unstash 'project-ansible'
-                unstash 'projectansible'
-                sh "sudo rm -rf ~/apache*/webapp/*.war" 
-                sh "sudo mv target/*.war ~/apache*/webapps/"
-                sh "sudo systemctl daemon-reload"
-                sh "~/apache-tomcat-7.0.94/bin/startup.sh"
+                script {
+                    // Use Ansible to deploy the application across three nodes
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                }
+            }
+            parallel {
+                stage('node1a') {
+                    agent {
+                        label 'node1a'
+                    }
+                    steps {
+                        script {
+                            unstash 'projectansible'
+                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                        }
+                    }
+                }
+                stage('node2u') {
+                    agent {
+                        label 'node2u'
+                    }
+                    steps {
+                        script {
+                            unstash 'projectansible'
+                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                        }
+                    }
+                }
+                stage('node3c') {
+                    agent {
+                        label 'node3c'
+                    }
+                    steps {
+                        script {
+                            unstash 'projectansible'
+                            ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                        }
+                    }
+                }
             }
         }
     }
@@ -44,7 +68,7 @@ pipeline {
             script {
                 mail to: 'olawalemada@gmail.com',
                     subject: "Success: ${currentBuild.fullDisplayName}",
-                    body: "Build was successful. Congratulations!"
+                    body: "Build and deployment were successful. Congratulations!"
             }
         }
         failure {
@@ -52,7 +76,7 @@ pipeline {
             script {
                 mail to: 'olawalemada@gmail.com',
                     subject: "Failed: ${currentBuild.fullDisplayName}",
-                    body: "Something went wrong. Please check the build logs."
+                    body: "Something went wrong. Please check the build and deployment logs."
             }  
         }
     }
