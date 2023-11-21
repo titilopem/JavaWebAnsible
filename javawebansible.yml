@@ -19,7 +19,7 @@
 
     - name: Copy WAR file to Tomcat webapps directory
       ansible.builtin.copy:
-        src: "{{ ansible_env.WORKSPACE }}/ansibleproject/target/*.war"
+        src: "{{ WORKSPACE }}/ansibleproject/target/*.war"
         dest: "{{ tomcat_path }}/webapps/"
       notify:
         - Restart Tomcat
