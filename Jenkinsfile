@@ -1,7 +1,7 @@
 pipeline {
     agent none
     environment {
-        ANSIBLE_PATH = '/usr/bin'
+        PATH = "/usr/bin:$PATH"
     }
     stages {
         stage('Build') {
@@ -10,6 +10,7 @@ pipeline {
             }
             steps {
                 echo 'Building the application'
+                // Define build steps here
                 sh '/opt/maven/bin/mvn clean package'
             }
         }
@@ -19,8 +20,9 @@ pipeline {
             }
             steps {
                 echo 'Running tests'
+                // Define test steps here
                 sh 'mvn test'
-                stash(name: 'ansibleproject', includes: "target/*.war")
+                stash (name: 'ansibleproject', includes: "target/*.war")
             }
         }
         stage('Deploy on Amazon') {
@@ -31,9 +33,7 @@ pipeline {
                 echo 'Deploying the application to n1a'
                 script {
                     unstash 'ansibleproject'
-                    withEnv(["PATH+ANSIBLE=${ANSIBLE_PATH}"]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                    }
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
         }
@@ -45,9 +45,7 @@ pipeline {
                 echo 'Deploying the application to n2u'
                 script {
                     unstash 'ansibleproject'
-                    withEnv(["PATH+ANSIBLE=${ANSIBLE_PATH}"]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                    }
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
         }
@@ -59,9 +57,7 @@ pipeline {
                 echo 'Deploying the application to n3c'
                 script {
                     unstash 'ansibleproject'
-                    withEnv(["PATH+ANSIBLE=${ANSIBLE_PATH}"]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
-                    }
+                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
         }
