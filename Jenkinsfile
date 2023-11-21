@@ -17,8 +17,7 @@ pipeline {
                 dir('/home/centos/workspace/ansibleproject') {
                     checkout scm
                     sh '/opt/maven/bin/mvn clean package'
-                    stash name: 'application', includes: 'target/**/*.war'
-                    stash name: 'ansibleFiles', includes: '*.yml, *.ini'
+                    stash name: 'ansibleproject', includes: 'target/*.war'
                 }
             }
         }
@@ -40,10 +39,10 @@ pipeline {
             }
             steps {
                 script {
-                    unstash 'application'
-                    unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N1A]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n1a']
+                        echo 'Deploying the application'
+                        unstash 'ansibleproject'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [workspace_path: '/home/centos/workspace/ansibleproject']
                     }
                 }
             }
@@ -55,10 +54,10 @@ pipeline {
             }
             steps {
                 script {
-                    unstash 'application'
-                    unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N2U]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n2u']
+                        echo 'Deploying the application'
+                        unstash 'ansibleproject'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [workspace_path: '/home/centos/workspace/ansibleproject']
                     }
                 }
             }
@@ -70,10 +69,10 @@ pipeline {
             }
             steps {
                 script {
-                    unstash 'application'
-                    unstash 'ansibleFiles'
                     sshagent(credentials: [CREDENTIALS_N3C]) {
-                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [target_node: 'n3c']
+                        echo 'Deploying the application'
+                        unstash 'ansibleproject'
+                        ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini', extraVars: [workspace_path: '/home/centos/workspace/ansibleproject']
                     }
                 }
             }
