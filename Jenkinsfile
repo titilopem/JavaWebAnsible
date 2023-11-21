@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent none
 
     environment {
         WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
@@ -12,7 +12,9 @@ pipeline {
             }
             steps {
                 dir(WORKSPACE_PATH) {
-                    stash name: 'ansibleproject', includes: '**/*'
+                    // Fetch and stash Ansible-related files
+                    checkout scm
+                    stash name: 'ansibleFiles', includes: ['*.yml', '*.ini']
                 }
             }
         }
@@ -24,7 +26,7 @@ pipeline {
             steps {
                 dir(WORKSPACE_PATH) {
                     sh '/opt/maven/bin/mvn clean package'
-                    stash name: 'ansibleproject', includes: 'target/**/*.war'
+                    stash name: 'webApp', includes: 'target/**/*.war'
                 }
             }
         }
@@ -36,10 +38,10 @@ pipeline {
             steps {
                 dir(WORKSPACE_PATH) {
                     sh 'mvn test'
-                    stash name: 'ansibleproject', includes: 'target/**/*.war'
                 }
             }
         }
+
         stage('Deploy on Amazon') {
             agent {
                 label 'n1a'
@@ -48,11 +50,14 @@ pipeline {
                 script {
                     WORKSPACE_PATH = '/home/ec2-user/workspace/ansibleproject'
                     echo 'Deploying the application to n1a'
-                    unstash 'ansibleproject'
-                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                    unstash 'ansibleFiles'  // Unstash Ansible-related files
+                    sh '/usr/bin/ansible-playbook -i inventory.ini javawebansible.yml'
+                    unstash 'webApp'  // Unstash web application
+                    // Copy .war file to destination on n1a
                 }
             }
         }
+
         stage('Deploy on Ubuntu') {
             agent {
                 label 'n2u'
@@ -61,11 +66,14 @@ pipeline {
                 script {
                     WORKSPACE_PATH = '/home/ubuntu/workspace/ansibleproject'
                     echo 'Deploying the application to n2u'
-                    unstash 'ansibleproject'
-                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                    unstash 'ansibleFiles'  // Unstash Ansible-related files
+                    sh '/usr/bin/ansible-playbook -i inventory.ini javawebansible.yml'
+                    unstash 'webApp'  // Unstash web application
+                    // Copy .war file to destination on n2u
                 }
             }
         }
+
         stage('Deploy on CentOS') {
             agent {
                 label 'n3c'
@@ -74,12 +82,15 @@ pipeline {
                 script {
                     WORKSPACE_PATH = '/home/centos/workspace/ansibleproject'
                     echo 'Deploying the application to n3c'
-                    unstash 'ansibleproject'
-                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                    unstash 'ansibleFiles'  // Unstash Ansible-related files
+                    sh '/usr/bin/ansible-playbook -i inventory.ini javawebansible.yml'
+                    unstash 'webApp'  // Unstash web application
+                    // Copy .war file to destination on n3c
                 }
             }
         }
     }
+
     post {
         success {
             echo 'Pipeline succeeded! Send success notification.'
