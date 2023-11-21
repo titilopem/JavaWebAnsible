@@ -30,6 +30,7 @@ pipeline {
                 echo 'Deploying the application to n1a'
                 script {
                     unstash 'ansibleproject'
+                    sh 'which ansible-playbook' // Check ansible-playbook path
                     ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
@@ -42,6 +43,7 @@ pipeline {
                 echo 'Deploying the application to n2u'
                 script {
                     unstash 'ansibleproject'
+                    sh 'which ansible-playbook' // Check ansible-playbook path
                     ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
@@ -54,6 +56,7 @@ pipeline {
                 echo 'Deploying the application to n3c'
                 script {
                     unstash 'ansibleproject'
+                    sh 'which ansible-playbook' // Check ansible-playbook path
                     ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
                 }
             }
