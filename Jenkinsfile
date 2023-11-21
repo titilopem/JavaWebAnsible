@@ -10,6 +10,7 @@ pipeline {
     }
     stages {
         stage('Checkout') {
+            agent any
             steps {
                 checkout scm
             }
@@ -33,22 +34,20 @@ pipeline {
                 label 'n1a'
             }
             steps {
-                node('n1a') {
-                    script {
-                        unstash 'war'
-                        // Your deployment steps
-                        ansiblePlaybook(
-                            become: true,
-                            inventory: 'hosts.ini',
-                            playbook: 'javawebansible.yml',
-                            extraVars: [
-                                war_file: 'target/*.war',
-                                ansible_user: env.TOMCAT_USER_N1A,
-                                ansible_ssh_private_key_file: env.SSH_KEY_N1A,
-                                ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                            ]
-                        )
-                    }
+                script {
+                    unstash 'war'
+                    // Your deployment steps
+                    ansiblePlaybook(
+                        become: true,
+                        inventory: 'hosts.ini',
+                        playbook: 'javawebansible.yml',
+                        extraVars: [
+                            war_file: 'target/*.war',
+                            ansible_user: env.TOMCAT_USER_N1A,
+                            ansible_ssh_private_key_file: env.SSH_KEY_N1A,
+                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                        ]
+                    )
                 }
             }
         }
@@ -58,22 +57,20 @@ pipeline {
                 label 'n2u'
             }
             steps {
-                node('n2u') {
-                    script {
-                        unstash 'war'
-                        // Your deployment steps
-                        ansiblePlaybook(
-                            become: true,
-                            inventory: 'hosts.ini',
-                            playbook: 'javawebansible.yml',
-                            extraVars: [
-                                war_file: 'target/*.war',
-                                ansible_user: env.TOMCAT_USER_N2U,
-                                ansible_ssh_private_key_file: env.SSH_KEY_N2U,
-                                ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                            ]
-                        )
-                    }
+                script {
+                    unstash 'war'
+                    // Your deployment steps
+                    ansiblePlaybook(
+                        become: true,
+                        inventory: 'hosts.ini',
+                        playbook: 'javawebansible.yml',
+                        extraVars: [
+                            war_file: 'target/*.war',
+                            ansible_user: env.TOMCAT_USER_N2U,
+                            ansible_ssh_private_key_file: env.SSH_KEY_N2U,
+                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                        ]
+                    )
                 }
             }
         }
@@ -83,27 +80,26 @@ pipeline {
                 label 'n3c'
             }
             steps {
-                node('n3c') {
-                    script {
-                        unstash 'war'
-                        // Your deployment steps
-                        ansiblePlaybook(
-                            become: true,
-                            inventory: 'hosts.ini',
-                            playbook: 'javawebansible.yml',
-                            extraVars: [
-                                war_file: 'target/*.war',
-                                ansible_user: env.TOMCAT_USER_N3C,
-                                ansible_ssh_private_key_file: env.SSH_KEY_N3C,
-                                ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                            ]
-                        )
-                    }
+                script {
+                    unstash 'war'
+                    // Your deployment steps
+                    ansiblePlaybook(
+                        become: true,
+                        inventory: 'hosts.ini',
+                        playbook: 'javawebansible.yml',
+                        extraVars: [
+                            war_file: 'target/*.war',
+                            ansible_user: env.TOMCAT_USER_N3C,
+                            ansible_ssh_private_key_file: env.SSH_KEY_N3C,
+                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+                        ]
+                    )
                 }
             }
         }
 
         stage('Cleanup') {
+            agent any
             steps {
                 script {
                     deleteDir()
