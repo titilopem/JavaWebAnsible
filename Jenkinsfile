@@ -12,78 +12,80 @@ pipeline {
             }
             steps {
                 dir(WORKSPACE_PATH) {
-                    // Fetch and stash Ansible-related files
+                    // Fetch and stash Ansible-related files from Git
                     checkout scm
                     stash name: 'ansibleFiles', includes: '*.yml, *.ini'
                 }
             }
         }
 
-        stage('Build') {
+        stage('Build and Test') {
             agent {
                 label 'n4c'
             }
             steps {
                 dir(WORKSPACE_PATH) {
+                    // Build and test your web application on n4c
                     sh '/opt/maven/bin/mvn clean package'
                     stash name: 'application', includes: 'target/**/*.war'
                 }
             }
         }
 
-        stage('Test') {
-            agent {
-                label 'n4c'
-            }
-            steps {
-                dir(WORKSPACE_PATH) {
-                    sh 'mvn test'
-                }
-            }
-        }
-
-        stage('Deploy on Nodes') {
+        stage('Copy Web App to Nodes') {
             parallel {
-                stage('Deploy on Amazon') {
+                stage('Copy to n1a') {
                     agent {
                         label 'n1a'
                     }
                     steps {
+                        // Copy the web app to n1a
                         script {
-                            echo 'Deploying the application to n1a'
+                            echo 'Copying the application to n1a'
                             unstash 'application'
-                            unstash 'ansibleFiles'
-                            ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                            ansiblePlaybook playbook: "${WORKSPACE_PATH}/copy_to_nodes.yml", inventory: "${WORKSPACE_PATH}/hosts.ini", extraVars: [target_node: 'n1a']
                         }
                     }
                 }
-
-                stage('Deploy on Ubuntu') {
+                stage('Copy to n2u') {
                     agent {
                         label 'n2u'
                     }
                     steps {
+                        // Copy the web app to n2u
                         script {
-                            echo 'Deploying the application to n2u'
+                            echo 'Copying the application to n2u'
                             unstash 'application'
-                            unstash 'ansibleFiles'
-                            ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                            ansiblePlaybook playbook: "${WORKSPACE_PATH}/copy_to_nodes.yml", inventory: "${WORKSPACE_PATH}/hosts.ini", extraVars: [target_node: 'n2u']
                         }
                     }
                 }
-
-                stage('Deploy on CentOS') {
+                stage('Copy to n3c') {
                     agent {
                         label 'n3c'
                     }
                     steps {
+                        // Copy the web app to n3c
                         script {
-                            echo 'Deploying the application to n3c'
+                            echo 'Copying the application to n3c'
                             unstash 'application'
-                            unstash 'ansibleFiles'
-                            ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
+                            ansiblePlaybook playbook: "${WORKSPACE_PATH}/copy_to_nodes.yml", inventory: "${WORKSPACE_PATH}/hosts.ini", extraVars: [target_node: 'n3c']
                         }
                     }
+                }
+            }
+        }
+
+        stage('Deploy with Ansible') {
+            agent {
+                label 'n4c'
+            }
+            steps {
+                script {
+                    // Run Ansible playbook on n4c
+                    unstash 'application'
+                    unstash 'ansibleFiles'
+                    ansiblePlaybook playbook: "${WORKSPACE_PATH}/javawebansible.yml", inventory: "${WORKSPACE_PATH}/hosts.ini"
                 }
             }
         }
