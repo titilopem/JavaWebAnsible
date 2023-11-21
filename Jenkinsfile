@@ -6,6 +6,18 @@ pipeline {
     }
 
     stages {
+        stage('Print Environment Variables') {
+            agent {
+                label 'n4c'
+            }
+            steps {
+                script {
+                    echo 'Printing environment variables...'
+                    sh 'env'
+                }
+            }
+        }
+
         stage('Fetch Ansible Files') {
             agent {
                 label 'n4c'
@@ -77,15 +89,54 @@ pipeline {
         }
 
         stage('Deploy with Ansible') {
-            agent {
-                label 'n4c'
-            }
-            steps {
-                script {
-                    // Run Ansible playbook on n4c
-                    unstash 'application'
-                    unstash 'ansibleFiles'
-                    ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+            parallel {
+                stage('Deploy to n1a') {
+                    agent {
+                        label 'n1a'
+                    }
+                    steps {
+                        script {
+                            // Start the SSH Agent and add credentials
+                            sshagent(credentials: ['n1a']) {
+                                // Run Ansible playbook on n1a
+                                unstash 'application'
+                                unstash 'ansibleFiles'
+                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                            }
+                        }
+                    }
+                }
+                stage('Deploy to n2u') {
+                    agent {
+                        label 'n2u'
+                    }
+                    steps {
+                        script {
+                            // Start the SSH Agent and add credentials
+                            sshagent(credentials: ['n2u']) {
+                                // Run Ansible playbook on n2u
+                                unstash 'application'
+                                unstash 'ansibleFiles'
+                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                            }
+                        }
+                    }
+                }
+                stage('Deploy to n3c') {
+                    agent {
+                        label 'n3c'
+                    }
+                    steps {
+                        script {
+                            // Start the SSH Agent and add credentials
+                            sshagent(credentials: ['n3c']) {
+                                // Run Ansible playbook on n3c
+                                unstash 'application'
+                                unstash 'ansibleFiles'
+                                ansiblePlaybook playbook: 'javawebansible.yml', inventory: 'hosts.ini'
+                            }
+                        }
+                    }
                 }
             }
         }
