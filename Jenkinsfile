@@ -67,7 +67,7 @@ pipeline {
         }
 
         stage('Clean Up') {
-            agent { any }
+            agent any
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
@@ -77,7 +77,7 @@ pipeline {
         }
 
         stage('Diagnostic Output') {
-            agent { any }
+            agent any
             steps {
                 script {
                     echo 'Current workspace contents:'
