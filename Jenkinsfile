@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        N4C_CREDENTIAL = credentials('n4c')
-        N6C_CREDENTIAL = credentials('n6c')
+        N4C_CREDENTIAL = credentials('n3c')
+        N6C_CREDENTIAL = credentials('n3c')
     }
 
     stages {
