@@ -1,29 +1,16 @@
 pipeline {
-    agent none // Set to none to explicitly control where stages run
+    agent none
 
-    // Function to deploy with Ansible
-    def deployWithAnsible(host, user, privateKey) {
-        sshagent(credentials: [host]) {
-            ansiblePlaybook(
-                become: true,
-                inventory: 'hosts.ini',
-                playbook: 'javawebansible.yml',
-                extraVars: [
-                    war_file: 'target/*.war',
-                    ansible_user: user,
-                    ansible_ssh_private_key_file: privateKey,
-                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no',
-                    ANSIBLE_DEBUG: '-vvv'
-                ]
-            )
-        }
+    environment {
+        // Define credentials IDs for nodes
+        N1A_CREDENTIAL = credentials('n1a')
+        N2U_CREDENTIAL = credentials('n2u')
+        N3C_CREDENTIAL = credentials('n3c')
     }
 
     stages {
         stage('Checkout') {
-            agent {
-                label 'n4c'
-            }
+            agent any
             steps {
                 checkout scm
             }
@@ -43,7 +30,7 @@ pipeline {
             agent any
             steps {
                 script {
-                    deployWithAnsible('n1a', 'ec2-user', '')
+                    deployWithAnsible('n1a', 'ec2-user', N1A_CREDENTIAL)
                 }
             }
         }
@@ -52,7 +39,7 @@ pipeline {
             agent any
             steps {
                 script {
-                    deployWithAnsible('n2u', 'ubuntu', '')
+                    deployWithAnsible('n2u', 'ubuntu', N2U_CREDENTIAL)
                 }
             }
         }
@@ -61,7 +48,7 @@ pipeline {
             agent any
             steps {
                 script {
-                    deployWithAnsible('n3c', 'centos', '')
+                    deployWithAnsible('n3c', 'centos', N3C_CREDENTIAL)
                 }
             }
         }
@@ -91,5 +78,21 @@ pipeline {
                      body: "Something went wrong. Please check the build, test, and deployment logs."
             }
         }
+    }
+}
+
+def deployWithAnsible(host, user, credentialId) {
+    sshagent([credentialId]) {
+        ansiblePlaybook(
+            become: true,
+            inventory: 'hosts.ini',
+            playbook: 'javawebansible.yml',
+            extraVars: [
+                war_file: 'target/*.war',
+                ansible_user: user,
+                ansible_ssh_common_args: '-o StrictHostKeyChecking=no',
+                ANSIBLE_DEBUG: '-vvv' // Add this line for increased verbosity
+            ]
+        )
     }
 }
