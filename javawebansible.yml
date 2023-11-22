@@ -2,30 +2,33 @@
 - name: Deploy WAR file to Tomcat
   hosts: your_tomcat_hosts
   gather_facts: true
+  become: yes
 
   tasks:
-    - name: Find the latest WAR file in the target directory
-      ansible.builtin.shell:
-        cmd: "ls -t {{ workspace }}/target/*.war | head -n1"
-      register: latest_war
+    - name: Check if Tomcat is installed
+      stat:
+        path: "/usr/local/apache-tomcat-10.1.16"
+      register: tomcat_installed
+    
+    - name: Stop Tomcat
+      systemd:
+        name: tomcat
+        state: stopped
+      when: tomcat_installed.stat.exists
+      
+    - name: Remove existing WAR file from Tomcat webapps directory
+      ansible.builtin.find:
+        paths: "/usr/local/apache-tomcat-10.1.16/webapps/"
+        patterns: "*.war"
+        recurse: yes
+      register: old_war_files
+      when: tomcat_installed.stat.exists and 
+            (ansible_distribution == "Ubuntu" or ansible_distribution == "CentOS" or ansible_distribution == "Amazon")
 
     - name: Copy the latest WAR file to the target directory
       ansible.builtin.copy:
         src: "{{ latest_war.stdout }}"
-        dest: "~/apache*/webapps/"
-
-    - name: Remove old WAR files from Tomcat webapps directory
-      ansible.builtin.find:
-        paths: "~/apache*/webapps/"
-        patterns: "*.war"
-        recurse: yes
-      register: old_war_files
-
-    - name: Remove old WAR files
-      ansible.builtin.file:
-        path: "{{ item.path }}"
-        state: absent
-      with_items: "{{ old_war_files.files }}"
+        dest: "/usr/local/apache-tomcat-10.1.16/webapps/"
 
     - name: Reload Tomcat
       ansible.builtin.service:
