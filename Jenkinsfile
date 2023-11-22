@@ -39,7 +39,7 @@ pipeline {
         }
 
         stage('Fetch Configuration Files') {
-            agent { label 'n4c' }
+            agent { label 'n6c' }
             steps {
                 script {
                     echo 'Fetching the latest configuration files from Git'
