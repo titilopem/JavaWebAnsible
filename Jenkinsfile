@@ -10,7 +10,6 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            agent any
             steps {
                 script {
                     checkout scm
