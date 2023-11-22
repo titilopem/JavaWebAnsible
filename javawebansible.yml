@@ -4,41 +4,46 @@
   become: true
 
   vars:
-    tomcat_user: "{{ ansible_user }}"  # Set this to the user running the Tomcat process
+    tomcat_user: root  # Set this to the user running the Tomcat process
 
   tasks:
-    - name: Remove existing WAR files from Tomcat webapps directory
-      ansible.builtin.shell:
-        cmd: "sudo rm -rf /usr/local/latest/webapps/*.war"
-      become_user: "{{ tomcat_user }}"
-      become_method: sudo
-      when: ansible_os_family == 'RedHat'
+    - name: Debug information - Connection details
+      debug:
+        var: hostvars[inventory_hostname]['ansible_ssh_host']
+
+    - name: Debug information - SSH user
+      debug:
+        var: ansible_user
+
+    - name: Debug information - Private key file
+      debug:
+        var: ansible_ssh_private_key_file
 
     - name: Remove existing WAR files from Tomcat webapps directory
       ansible.builtin.shell:
         cmd: "sudo rm -rf /usr/local/latest/webapps/*.war"
       become_user: "{{ tomcat_user }}"
       become_method: sudo
-      when: ansible_os_family == 'Debian'
+      when: ansible_os_family in ['RedHat', 'Debian']
 
     - name: Copy WAR file to Tomcat webapps directory
       ansible.builtin.shell:
         cmd: "sudo mv {{ war_file }} /usr/local/latest/webapps/"
       become_user: "{{ tomcat_user }}"
       become_method: sudo
-      when: ansible_os_family == 'RedHat' or ansible_os_family == 'Debian'
+      when: ansible_os_family in ['RedHat', 'Debian']
 
     - name: Reload systemd configuration
       ansible.builtin.systemd:
         daemon_reload: yes
       become_user: "{{ tomcat_user }}"
       become_method: sudo
-      when: ansible_os_family == 'RedHat' or ansible_os_family == 'Debian'
+      when: ansible_os_family in ['RedHat', 'Debian']
 
     - name: Start Tomcat
       ansible.builtin.shell:
         cmd: "/usr/local/latest/bin/startup.sh"
       become_user: "{{ tomcat_user }}"
       become_method: sudo
-      when: ansible_os_family == 'RedHat' or ansible_os_family == 'Debian'
+      when: ansible_os_family in ['RedHat', 'Debian']
 ...
