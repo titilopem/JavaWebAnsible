@@ -12,7 +12,7 @@ pipeline {
         stage('Checkout') {
             agent any
             steps {
-                node {
+                script {
                     checkout scm
                 }
             }
@@ -29,7 +29,9 @@ pipeline {
         }
 
         stage('Deploy on n1a') {
-            agent any
+            agent {
+                label 'n1a'
+            }
             steps {
                 script {
                     deployWithAnsible('n1a', 'ec2-user', N1A_CREDENTIAL)
@@ -38,7 +40,9 @@ pipeline {
         }
 
         stage('Deploy on n2u') {
-            agent any
+            agent {
+                label 'n2u'
+            }
             steps {
                 script {
                     deployWithAnsible('n2u', 'ubuntu', N2U_CREDENTIAL)
@@ -47,7 +51,9 @@ pipeline {
         }
 
         stage('Deploy on n3c') {
-            agent any
+            agent {
+                label 'n3c'
+            }
             steps {
                 script {
                     deployWithAnsible('n3c', 'centos', N3C_CREDENTIAL)
