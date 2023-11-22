@@ -15,7 +15,7 @@ def deployWithAnsible(host, user, privateKey) {
 }
 
 pipeline {
-    agent any
+    agent none
 
     stages {
         stage('Checkout') {
