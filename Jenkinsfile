@@ -20,7 +20,7 @@ pipeline {
             steps {
                 echo 'Building the project using N4C'
                 script {
-                    sh 'n4c mvn clean package'
+                    sh 'mvn clean package'
                     stash(name: 'build', includes: 'target/*.war')
                 }
             }
@@ -33,7 +33,7 @@ pipeline {
             steps {
                 echo 'Running tests using N4C'
                 script {
-                    sh 'n4c mvn test'
+                    sh 'mvn test'
                 }
             }
         }
