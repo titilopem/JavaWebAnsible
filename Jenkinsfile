@@ -2,9 +2,8 @@ pipeline {
     agent any
 
     environment {
-        N1A_CREDENTIAL = credentials('n1a')
-        N2U_CREDENTIAL = credentials('n2u')
-        N3C_CREDENTIAL = credentials('n3c')
+        N4C_CREDENTIAL = credentials('n4c')
+        N6C_CREDENTIAL = credentials('n6c')
     }
 
     stages {
@@ -15,65 +14,46 @@ pipeline {
         }
 
         stage('Build') {
+            agent {
+                label 'n4c'  // Use the n4c node for build
+            }
             steps {
-                echo 'Building the project'
-                sh 'mvn clean package'
+                echo 'Building the project using N4C'
+                script {
+                    sh 'n4c mvn clean package'
+                    stash(name: 'build', includes: 'target/*.war')
+                }
             }
         }
 
         stage('Test') {
+            agent {
+                label 'n4c'  // Use the n4c node for testing
+            }
             steps {
-                echo 'Running tests'
-                sh 'mvn test'
+                echo 'Running tests using N4C'
+                script {
+                    sh 'n4c mvn test'
+                }
             }
         }
 
-        stage('Stash') {
+        stage('Stash Ansible Files') {
             steps {
-                echo 'Stashing the .war file and Ansible files'
-                stash(name: 'ansibleproject', includes: ['target/*.war', 'javawebansible.yml', 'hosts.ini'])
+                echo 'Stashing the Ansible files'
+                stash(name: 'ansibleproject', includes: ['target/*.war'])
             }
         }
 
-        stage('Deploy on Nodes') {
-            parallel {
-                stage('Deploy on n1a') {
-                    agent {
-                        label 'n1a'
-                    }
-                    steps {
-                        script {
-                            echo 'Deploying on n1a'
-                            unstash 'ansibleproject'
-                            deployWithAnsible('n1a', 'ec2-user', N1A_CREDENTIAL)
-                        }
-                    }
-                }
-
-                stage('Deploy on n2u') {
-                    agent {
-                        label 'n2u'
-                    }
-                    steps {
-                        script {
-                            echo 'Deploying on n2u'
-                            unstash 'ansibleproject'
-                            deployWithAnsible('n2u', 'ubuntu', N2U_CREDENTIAL)
-                        }
-                    }
-                }
-
-                stage('Deploy on n3c') {
-                    agent {
-                        label 'n3c'
-                    }
-                    steps {
-                        script {
-                            echo 'Deploying on n3c'
-                            unstash 'ansibleproject'
-                            deployWithAnsible('n3c', 'centos', N3C_CREDENTIAL)
-                        }
-                    }
+        stage('Deploy on Ansible Master') {
+            agent {
+                label 'n6c'
+            }
+            steps {
+                script {
+                    echo 'Deploying on Ansible Master'
+                    unstash 'ansibleproject'
+                    sh 'ansible-playbook javawebansible.yml -i hosts.ini'
                 }
             }
         }
