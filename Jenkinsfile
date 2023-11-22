@@ -1,19 +1,3 @@
-// Function to deploy with Ansible
-def deployWithAnsible(host, user, privateKey) {
-    ansiblePlaybook(
-        become: true,
-        inventory: 'hosts.ini',
-        playbook: 'javawebansible.yml',
-        extraVars: [
-            war_file: 'target/*.war',
-            ansible_user: user,
-            ansible_ssh_private_key_file: privateKey,
-            ansible_ssh_common_args: '-o StrictHostKeyChecking=no',
-            ANSIBLE_DEBUG: '-vvv' // Add this line for increased verbosity
-        ]
-    )
-}
-
 pipeline {
     agent none // Set to none to explicitly control where stages run
 
@@ -41,7 +25,9 @@ pipeline {
             agent any
             steps {
                 script {
-                    deployWithAnsible('n1a', 'ec2-user', '/home/centos/doorkey.pem')
+                    sshagent(credentials: ['n1a']) {
+                        deployWithAnsible('n1a', 'ec2-user', '')
+                    }
                 }
             }
         }
@@ -50,7 +36,9 @@ pipeline {
             agent any
             steps {
                 script {
-                    deployWithAnsible('n2u', 'ubuntu', '/home/centos/doorkey.pem')
+                    sshagent(credentials: ['n2u']) {
+                        deployWithAnsible('n2u', 'ubuntu', '')
+                    }
                 }
             }
         }
@@ -59,7 +47,9 @@ pipeline {
             agent any
             steps {
                 script {
-                    deployWithAnsible('n3c', 'centos', '/home/centos/doorkey.pem')
+                    sshagent(credentials: ['n3c']) {
+                        deployWithAnsible('n3c', 'centos', '')
+                    }
                 }
             }
         }
