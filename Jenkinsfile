@@ -12,7 +12,9 @@ pipeline {
         stage('Checkout') {
             agent any
             steps {
-                checkout scm
+                node {
+                    checkout scm
+                }
             }
         }
 
@@ -82,17 +84,19 @@ pipeline {
 }
 
 def deployWithAnsible(host, user, credentialId) {
-    sshagent([credentialId]) {
-        ansiblePlaybook(
-            become: true,
-            inventory: 'hosts.ini',
-            playbook: 'javawebansible.yml',
-            extraVars: [
-                war_file: 'target/*.war',
-                ansible_user: user,
-                ansible_ssh_common_args: '-o StrictHostKeyChecking=no',
-                ANSIBLE_DEBUG: '-vvv' // Add this line for increased verbosity
-            ]
-        )
+    node {
+        sshagent([credentialId]) {
+            ansiblePlaybook(
+                become: true,
+                inventory: 'hosts.ini',
+                playbook: 'javawebansible.yml',
+                extraVars: [
+                    war_file: 'target/*.war',
+                    ansible_user: user,
+                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no',
+                    ANSIBLE_DEBUG: '-vvv' // Add this line for increased verbosity
+                ]
+            )
+        }
     }
 }
