@@ -1,5 +1,5 @@
 pipeline {
-    agent none
+    agent any
 
     environment {
         N4C_CREDENTIAL = credentials('n3c')
@@ -67,7 +67,7 @@ pipeline {
         }
 
         stage('Clean Up') {
-            agent { label 'n4c || n6c' }
+            agent { any }
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
@@ -77,7 +77,7 @@ pipeline {
         }
 
         stage('Diagnostic Output') {
-            agent { label 'n4c || n6c' }
+            agent { any }
             steps {
                 script {
                     echo 'Current workspace contents:'
