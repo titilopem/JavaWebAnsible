@@ -8,7 +8,8 @@ def deployWithAnsible(host, user, privateKey) {
             war_file: 'target/*.war',
             ansible_user: user,
             ansible_ssh_private_key_file: privateKey,
-            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+            ansible_ssh_common_args: '-o StrictHostKeyChecking=no',
+            ANSIBLE_DEBUG: '-vvv' // Add this line for increased verbosity
         ]
     )
 }
