@@ -48,7 +48,7 @@ pipeline {
                         extraVars: [
                             war_file: 'target/*.war',
                             ansible_user: 'ubuntu',
-                            ansible_ssh_private_key_file: '/path/to/your/keyfile.pem',
+                            ansible_ssh_private_key_file: '/home/centos/doorkey.pem',
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
                         ]
                     )
@@ -67,7 +67,7 @@ pipeline {
                         extraVars: [
                             war_file: 'target/*.war',
                             ansible_user: 'centos',
-                            ansible_ssh_private_key_file: '/path/to/your/keyfile.pem',
+                            ansible_ssh_private_key_file: '/home/centos/doorkey.pem',
                             ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
                         ]
                     )
