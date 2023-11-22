@@ -1,3 +1,18 @@
+// Function to deploy with Ansible
+def deployWithAnsible(host, user, privateKey) {
+    ansiblePlaybook(
+        become: true,
+        inventory: 'hosts.ini',
+        playbook: 'javawebansible.yml',
+        extraVars: [
+            war_file: 'target/*.war',
+            ansible_user: user,
+            ansible_ssh_private_key_file: privateKey,
+            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        ]
+    )
+}
+
 pipeline {
     agent any
 
@@ -66,20 +81,5 @@ pipeline {
                      body: "Something went wrong. Please check the build, test, and deployment logs."
             }
         }
-    }
-
-    // Function to deploy with Ansible
-    def deployWithAnsible(host, user, privateKey) {
-        ansiblePlaybook(
-            become: true,
-            inventory: 'hosts.ini',
-            playbook: 'javawebansible.yml',
-            extraVars: [
-                war_file: 'target/*.war',
-                ansible_user: user,
-                ansible_ssh_private_key_file: privateKey,
-                ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-            ]
-        )
     }
 }
