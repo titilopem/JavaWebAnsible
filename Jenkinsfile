@@ -1,6 +1,24 @@
 pipeline {
     agent none // Set to none to explicitly control where stages run
 
+    // Function to deploy with Ansible
+    def deployWithAnsible(host, user, privateKey) {
+        sshagent(credentials: [host]) {
+            ansiblePlaybook(
+                become: true,
+                inventory: 'hosts.ini',
+                playbook: 'javawebansible.yml',
+                extraVars: [
+                    war_file: 'target/*.war',
+                    ansible_user: user,
+                    ansible_ssh_private_key_file: privateKey,
+                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no',
+                    ANSIBLE_DEBUG: '-vvv'
+                ]
+            )
+        }
+    }
+
     stages {
         stage('Checkout') {
             agent {
@@ -25,9 +43,7 @@ pipeline {
             agent any
             steps {
                 script {
-                    sshagent(credentials: ['n1a']) {
-                        deployWithAnsible('n1a', 'ec2-user', '')
-                    }
+                    deployWithAnsible('n1a', 'ec2-user', '')
                 }
             }
         }
@@ -36,9 +52,7 @@ pipeline {
             agent any
             steps {
                 script {
-                    sshagent(credentials: ['n2u']) {
-                        deployWithAnsible('n2u', 'ubuntu', '')
-                    }
+                    deployWithAnsible('n2u', 'ubuntu', '')
                 }
             }
         }
@@ -47,9 +61,7 @@ pipeline {
             agent any
             steps {
                 script {
-                    sshagent(credentials: ['n3c']) {
-                        deployWithAnsible('n3c', 'centos', '')
-                    }
+                    deployWithAnsible('n3c', 'centos', '')
                 }
             }
         }
