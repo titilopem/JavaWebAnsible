@@ -1,37 +1,23 @@
 ---
 - name: Deploy Java Web Application
   hosts: group1
-  become: true
-
-  vars:
-    tomcat_user: root  # Set this to the user running the Tomcat process
-
+  become: yes
   tasks:
     - name: Remove existing WAR files from Tomcat webapps directory
-      ansible.builtin.shell:
-        cmd: "sudo rm -rf ~/apache*/webapp/*.war"
-      become_user: "{{ tomcat_user }}"
-      become_method: sudo
+      shell: rm -rf ~/apache*/webapps/*.war
       when: ansible_os_family in ['RedHat', 'Debian']
 
     - name: Copy WAR file to Tomcat webapps directory
-      ansible.builtin.shell:
-        cmd: "sudo mv {{ war_file }} ~/apache*/webapps/"
-      become_user: "{{ tomcat_user }}"
-      become_method: sudo
+      shell: mv {{ war_file }} ~/apache*/webapps/
       when: ansible_os_family in ['RedHat', 'Debian']
 
-    - name: Reload systemd configuration
-      ansible.builtin.systemd:
-        daemon_reload: yes
-      become_user: "{{ tomcat_user }}"
-      become_method: sudo
-      when: ansible_os_family in ['RedHat', 'Debian']
+    - name: Reload systemd (if needed)
+      systemd:
+        name: tomcat
+        state: restarted
+      when: ansible_os_family in ['RedHat']
 
     - name: Start Tomcat
-      ansible.builtin.shell:
-        cmd: "~/apache-tomcat-7.0.94/bin/startup.sh"
-      become_user: "{{ tomcat_user }}"
-      become_method: sudo
+      shell: ~/apache-tomcat-7.0.94/bin/startup.sh
       when: ansible_os_family in ['RedHat', 'Debian']
 ...
