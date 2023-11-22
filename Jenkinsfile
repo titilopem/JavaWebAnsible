@@ -46,7 +46,7 @@ pipeline {
                 script {
                     echo 'Deploying on Ansible Master'
                     unstash 'build'
-                    sh 'ansible-playbook javawebansible.yml -i hosts.ini'
+                    sh 'ansible-playbook -i hosts.ini -e "war_file=target/*.war" javawebansible.yml'
                 }
             }
         }
