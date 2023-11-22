@@ -15,10 +15,13 @@ def deployWithAnsible(host, user, privateKey) {
 }
 
 pipeline {
-    agent none
+    agent none // Set to none to explicitly control where stages run
 
     stages {
         stage('Checkout') {
+            agent {
+                label 'n4c'
+            }
             steps {
                 checkout scm
             }
@@ -35,6 +38,7 @@ pipeline {
         }
 
         stage('Deploy on n1a') {
+            agent any
             steps {
                 script {
                     deployWithAnsible('n1a', 'ec2-user', '/home/centos/doorkey.pem')
@@ -43,6 +47,7 @@ pipeline {
         }
 
         stage('Deploy on n2u') {
+            agent any
             steps {
                 script {
                     deployWithAnsible('n2u', 'ubuntu', '/home/centos/doorkey.pem')
@@ -51,6 +56,7 @@ pipeline {
         }
 
         stage('Deploy on n3c') {
+            agent any
             steps {
                 script {
                     deployWithAnsible('n3c', 'centos', '/home/centos/doorkey.pem')
@@ -59,6 +65,7 @@ pipeline {
         }
 
         stage('Cleanup') {
+            agent any
             steps {
                 deleteDir()
             }
