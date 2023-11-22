@@ -47,7 +47,7 @@ pipeline {
                     ansiblePlaybook(
                         playbook: 'javawebansible.yml',
                         inventory: 'hosts.ini',
-                        extras: ["war_file=target/*.war"]
+                        extras: '--extra "war_file=target/*.war"'
                     )
                 }
             }
