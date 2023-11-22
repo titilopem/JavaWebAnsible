@@ -3,26 +3,49 @@
   hosts: group1
   become: yes
 
+  vars:
+    - name: tomcat_service
+      ansible.builtin.vars:
+        ansible_distribution: "{{ ansible_distribution }}"
+  
   tasks:
     - name: Ensure the target directory exists
-      file:
+      ansible.builtin.file:
         path: "~/apache*/webapps/"
         state: directory
 
-    - name: Copy WAR file to Tomcat webapps directory
+    - name: Stash the new WAR file
+      ansible.builtin.stash:
+        name: new_war
+        include:
+          - "{{ workspace }}/target/*.war"
+
+    - name: Remove old WAR files from Tomcat webapps directory
       ansible.builtin.find:
-        paths: "{{ workspace }}/target/"
+        paths: "~/apache*/webapps/"
         patterns: "*.war"
-      register: war_files
+        recurse: yes
+      register: old_war_files
 
-    - name: Check if WAR file exists
-      fail:
-        msg: "No WAR file found in {{ workspace }}/target/"
-      when: war_files.matched == 0
+    - name: Remove old WAR files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ old_war_files.files }}"
 
-    - name: Copy WAR file(s) to Tomcat
-      ansible.builtin.copy:
-        src: "{{ item.path }}"
+    - name: Unstash the new WAR file
+      ansible.builtin.unarchive:
+        src: "{{ item }}"
         dest: "~/apache*/webapps/"
-      with_items: "{{ war_files.files }}"
+      with_items: "{{ stashes.new_war }}"
+
+    - name: Reload Tomcat
+      ansible.builtin.service:
+        name: "{{ 'tomcat8' if ansible_distribution == 'Ubuntu' else 'tomcat' }}"
+        state: reloaded
+
+    - name: Start Tomcat
+      ansible.builtin.service:
+        name: "{{ 'tomcat8' if ansible_distribution == 'Ubuntu' else 'tomcat' }}"
+        state: started
 ...
