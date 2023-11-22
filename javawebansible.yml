@@ -3,6 +3,9 @@
   hosts: your_tomcat_hosts
   gather_facts: true
   become: yes
+  
+  vars:
+    workspace: "{{ workspace | default('/home/centos/workspace/ansibleproject') }}"
 
   tasks:
     - name: Check if Tomcat is installed
