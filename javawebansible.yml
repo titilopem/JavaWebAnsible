@@ -4,7 +4,7 @@
   become: true
 
   vars:
-    tomcat_user: root  # Set this to the user running the Tomcat process
+    tomcat_user: "{{ ansible_user }}"  # Set this to the user running the Tomcat process
 
   tasks:
     - name: Remove existing WAR files from Tomcat webapps directory
