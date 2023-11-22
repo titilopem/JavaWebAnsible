@@ -19,58 +19,25 @@ pipeline {
         }
 
         stage('Deploy on n1a') {
-            agent any
             steps {
                 script {
-                    ansiblePlaybook(
-                        become: true,
-                        inventory: 'hosts.ini',
-                        playbook: 'javawebansible.yml',
-                        extraVars: [
-                            war_file: 'target/*.war',
-                            ansible_user: 'ec2-user',
-                            ansible_ssh_private_key_file: '/home/centos/doorkey.pem',
-                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ]
-                    )
+                    deployWithAnsible('n1a', 'ec2-user', '/home/centos/doorkey.pem')
                 }
             }
         }
 
         stage('Deploy on n2u') {
-            agent any
             steps {
                 script {
-                    ansiblePlaybook(
-                        become: true,
-                        inventory: 'hosts.ini',
-                        playbook: 'javawebansible.yml',
-                        extraVars: [
-                            war_file: 'target/*.war',
-                            ansible_user: 'ubuntu',
-                            ansible_ssh_private_key_file: '/home/centos/doorkey.pem',
-                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ]
-                    )
+                    deployWithAnsible('n2u', 'ubuntu', '/home/centos/doorkey.pem')
                 }
             }
         }
 
         stage('Deploy on n3c') {
-            agent any
             steps {
                 script {
-                    ansiblePlaybook(
-                        become: true,
-                        inventory: 'hosts.ini',
-                        playbook: 'javawebansible.yml',
-                        extraVars: [
-                            war_file: 'target/*.war',
-                            ansible_user: 'centos',
-                            ansible_ssh_private_key_file: '/home/centos/doorkey.pem',
-                            ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-                        ]
-                    )
+                    deployWithAnsible('n3c', 'centos', '/home/centos/doorkey.pem')
                 }
             }
         }
@@ -99,5 +66,20 @@ pipeline {
                      body: "Something went wrong. Please check the build, test, and deployment logs."
             }
         }
+    }
+
+    // Function to deploy with Ansible
+    def deployWithAnsible(host, user, privateKey) {
+        ansiblePlaybook(
+            become: true,
+            inventory: 'hosts.ini',
+            playbook: 'javawebansible.yml',
+            extraVars: [
+                war_file: 'target/*.war',
+                ansible_user: user,
+                ansible_ssh_private_key_file: privateKey,
+                ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+            ]
+        )
     }
 }
