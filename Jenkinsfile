@@ -33,7 +33,7 @@ pipeline {
                 echo 'Running tests using N4C'
                 script {
                     sh 'mvn test'
-                    stash (name: 'build', includes: "target/*.war")
+                    stash(name: 'build', includes: "target/*.war")
                 }
             }
         }
@@ -53,11 +53,6 @@ pipeline {
     }
 
     post {
-        always {
-            script {
-                //cleanWs()
-            }
-        }
         success {
             echo 'Pipeline succeeded! Send success notification.'
             emailext subject: "Success: ${currentBuild.fullDisplayName}",
