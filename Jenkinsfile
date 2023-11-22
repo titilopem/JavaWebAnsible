@@ -33,9 +33,7 @@ pipeline {
                 label 'n1a'
             }
             steps {
-                script {
-                    deployWithAnsible('n1a', 'ec2-user', N1A_CREDENTIAL)
-                }
+                deployWithAnsible('n1a', 'ec2-user', N1A_CREDENTIAL)
             }
         }
 
@@ -44,9 +42,7 @@ pipeline {
                 label 'n2u'
             }
             steps {
-                script {
-                    deployWithAnsible('n2u', 'ubuntu', N2U_CREDENTIAL)
-                }
+                deployWithAnsible('n2u', 'ubuntu', N2U_CREDENTIAL)
             }
         }
 
@@ -55,9 +51,7 @@ pipeline {
                 label 'n3c'
             }
             steps {
-                script {
-                    deployWithAnsible('n3c', 'centos', N3C_CREDENTIAL)
-                }
+                deployWithAnsible('n3c', 'centos', N3C_CREDENTIAL)
             }
         }
 
