@@ -1,6 +1,6 @@
 ---
 - name: Deploy WAR file to Tomcat
-  hosts: your_tomcat_hosts
+  hosts: group1
   gather_facts: true
   become: yes
   
