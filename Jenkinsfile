@@ -4,6 +4,7 @@ pipeline {
     environment {
         N4C_CREDENTIAL = credentials('n3c')
         N6C_CREDENTIAL = credentials('n3c')
+        WORKSPACE_DIR = pwd()  // Setting WORKSPACE_DIR to Jenkins workspace
     }
 
     stages {
@@ -32,7 +33,7 @@ pipeline {
             }
         }
 
-        stage('Deploy on Ansible Master') {
+                stage('Deploy on Ansible Master') {
             agent {
                 label 'n6c'
             }
@@ -43,11 +44,11 @@ pipeline {
                     // Unstash the project files
                     unstash 'build'
 
-                    // Deploy using Ansible playbook
+                    // Deploy using Ansible playbook with WORKSPACE_DIR
                     ansiblePlaybook(
                         playbook: 'javawebansible.yml',
                         inventory: 'hosts.ini',
-                        extras: '--extra "war_file=target/*.war"'
+                        extras: "--extra \"workspace=${WORKSPACE_DIR}\""
                     )
                 }
             }
