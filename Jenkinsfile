@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent none
 
     environment {
         N4C_CREDENTIAL = credentials('n3c')
@@ -9,15 +9,16 @@ pipeline {
 
     stages {
         stage('Checkout') {
+            agent { label 'n4c' }
             steps {
                 script {
-                    // Explicitly check out the code
                     checkout scm
                 }
             }
         }
 
         stage('Build') {
+            agent { label 'n4c' }
             steps {
                 echo 'Building the project using N4C'
                 script {
@@ -27,6 +28,7 @@ pipeline {
         }
 
         stage('Test') {
+            agent { label 'n4c' }
             steps {
                 echo 'Running tests using N4C'
                 script {
@@ -37,15 +39,12 @@ pipeline {
         }
 
         stage('Fetch Configuration Files') {
+            agent { label 'n4c' }
             steps {
                 script {
                     echo 'Fetching the latest configuration files from Git'
-                    
-                    // Clean up old .yml and .ini files
                     sh "rm -f ${WORKSPACE_DIR}/*.yml"
                     sh "rm -f ${WORKSPACE_DIR}/*.ini"
-
-                    // Copy the latest .yml and .ini files to the workspace
                     sh 'cp -f path/to/your/config/*.yml ${WORKSPACE_DIR}/'
                     sh 'cp -f path/to/your/config/*.ini ${WORKSPACE_DIR}/'
                 }
@@ -53,14 +52,11 @@ pipeline {
         }
 
         stage('Deploy on Ansible Master') {
+            agent { label 'n6c' }
             steps {
                 script {
                     echo 'Deploying on Ansible Master'
-
-                    // Unstash the project files
                     unstash 'build'
-
-                    // Deploy using Ansible playbook with WORKSPACE_DIR
                     ansiblePlaybook(
                         playbook: 'javawebansible.yml',
                         inventory: 'hosts.ini',
@@ -71,22 +67,21 @@ pipeline {
         }
 
         stage('Clean Up') {
+            agent { label 'n4c || n6c' }
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
-
-                    // Add your clean-up tasks here, for example:
                     sh "rm -rf ${WORKSPACE_DIR}/target"
                 }
             }
         }
 
         stage('Diagnostic Output') {
+            agent { label 'n4c || n6c' }
             steps {
                 script {
                     echo 'Current workspace contents:'
                     sh 'ls -la ${WORKSPACE_DIR}'
-
                     echo 'Git log:'
                     sh 'git log -n 5'
                 }
