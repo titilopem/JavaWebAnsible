@@ -21,7 +21,6 @@ pipeline {
                 echo 'Building the project using N4C'
                 script {
                     sh 'mvn clean package'
-                    stash(name: 'build', includes: 'target/*.war')
                 }
             }
         }
@@ -34,14 +33,8 @@ pipeline {
                 echo 'Running tests using N4C'
                 script {
                     sh 'mvn test'
+                    stash (name: 'build', includes: "target/*.war")
                 }
-            }
-        }
-
-        stage('Stash Ansible Files') {
-            steps {
-                echo 'Stashing the Ansible files'
-                stash(name: 'ansibleproject', includes: ['target/*.war'])
             }
         }
 
@@ -52,7 +45,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying on Ansible Master'
-                    unstash 'ansibleproject'
+                    unstash 'build'
                     sh 'ansible-playbook javawebansible.yml -i hosts.ini'
                 }
             }
