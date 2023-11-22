@@ -45,8 +45,8 @@ pipeline {
                     echo 'Fetching the latest configuration files from Git'
                     sh "rm -f ${WORKSPACE_DIR}/*.yml"
                     sh "rm -f ${WORKSPACE_DIR}/*.ini"
-                    sh 'cp -f path/to/your/config/*.yml ${WORKSPACE_DIR}/'
-                    sh 'cp -f path/to/your/config/*.ini ${WORKSPACE_DIR}/'
+                    sh 'cp -f JavaWebAnsible/*.yml ${WORKSPACE_DIR}/'
+                    sh 'cp -f JavaWebAnsible/*.yml ${WORKSPACE_DIR}/'
                 }
             }
         }
