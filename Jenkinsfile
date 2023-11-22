@@ -8,10 +8,16 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
-            agent {
-                label 'n4c'  // Use the n4c node for build
+        stage('Checkout') {
+            steps {
+                script {
+                    // Explicitly check out the code
+                    checkout scm
+                }
             }
+        }
+
+        stage('Build') {
             steps {
                 echo 'Building the project using N4C'
                 script {
@@ -21,9 +27,6 @@ pipeline {
         }
 
         stage('Test') {
-            agent {
-                label 'n4c'  // Use the n4c node for testing
-            }
             steps {
                 echo 'Running tests using N4C'
                 script {
@@ -33,10 +36,23 @@ pipeline {
             }
         }
 
-                stage('Deploy on Ansible Master') {
-            agent {
-                label 'n6c'
+        stage('Fetch Configuration Files') {
+            steps {
+                script {
+                    echo 'Fetching the latest configuration files from Git'
+                    
+                    // Clean up old .yml and .ini files
+                    sh "rm -f ${WORKSPACE_DIR}/*.yml"
+                    sh "rm -f ${WORKSPACE_DIR}/*.ini"
+
+                    // Copy the latest .yml and .ini files to the workspace
+                    sh 'cp -f path/to/your/config/*.yml ${WORKSPACE_DIR}/'
+                    sh 'cp -f path/to/your/config/*.ini ${WORKSPACE_DIR}/'
+                }
             }
+        }
+
+        stage('Deploy on Ansible Master') {
             steps {
                 script {
                     echo 'Deploying on Ansible Master'
@@ -55,13 +71,24 @@ pipeline {
         }
 
         stage('Clean Up') {
-            agent any
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
 
                     // Add your clean-up tasks here, for example:
                     sh "rm -rf ${WORKSPACE_DIR}/target"
+                }
+            }
+        }
+
+        stage('Diagnostic Output') {
+            steps {
+                script {
+                    echo 'Current workspace contents:'
+                    sh 'ls -la ${WORKSPACE_DIR}'
+
+                    echo 'Git log:'
+                    sh 'git log -n 5'
                 }
             }
         }
