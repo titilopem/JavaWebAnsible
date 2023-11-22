@@ -9,7 +9,6 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            agent { label 'n4c' }
             steps {
                 script {
                     checkout scm
@@ -34,19 +33,6 @@ pipeline {
                 script {
                     sh 'mvn test'
                     stash(name: 'build', includes: "target/*.war")
-                }
-            }
-        }
-
-        stage('Fetch Configuration Files') {
-            agent { label 'n6c' }
-            steps {
-                script {
-                    echo 'Fetching the latest configuration files from Git'
-                    sh "rm -f ${WORKSPACE_DIR}/*.yml"
-                    sh "rm -f ${WORKSPACE_DIR}/*.ini"
-                    sh 'cp -f JavaWebAnsible/*.yml ${WORKSPACE_DIR}/'
-                    sh 'cp -f JavaWebAnsible/*.yml ${WORKSPACE_DIR}/'
                 }
             }
         }
