@@ -1,20 +1,17 @@
 ---
 - name: Deploy WAR file to Tomcat
-  hosts: group1
-  become: yes
-
-  vars:
-    tomcat_service: "{{ 'tomcat8' if ansible_distribution == 'Ubuntu' else 'tomcat' }}"
+  hosts: your_tomcat_hosts
+  gather_facts: true
 
   tasks:
-    - name: Ensure the target directory exists
-      ansible.builtin.file:
-        path: "~/apache*/webapps/"
-        state: directory
+    - name: Find the latest WAR file in the target directory
+      ansible.builtin.shell:
+        cmd: "ls -t {{ workspace }}/target/*.war | head -n1"
+      register: latest_war
 
-    - name: Copy the new WAR file to the target directory
+    - name: Copy the latest WAR file to the target directory
       ansible.builtin.copy:
-        src: "{{ workspace }}/target/*.war"
+        src: "{{ latest_war.stdout }}"
         dest: "~/apache*/webapps/"
 
     - name: Remove old WAR files from Tomcat webapps directory
