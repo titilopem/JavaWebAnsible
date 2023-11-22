@@ -53,6 +53,18 @@ pipeline {
                 }
             }
         }
+
+        stage('Clean Up') {
+            agent any
+            steps {
+                script {
+                    echo 'Cleaning up unnecessary files or directories'
+
+                    // Add your clean-up tasks here, for example:
+                    sh "rm -rf ${WORKSPACE_DIR}/target"
+                }
+            }
+        }
     }
 
     post {
