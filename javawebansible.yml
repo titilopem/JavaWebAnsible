@@ -4,10 +4,8 @@
   become: yes
 
   vars:
-    - name: tomcat_service
-      ansible.builtin.vars:
-        ansible_distribution: "{{ ansible_distribution }}"
-  
+    tomcat_service: "{{ 'tomcat8' if ansible_distribution == 'Ubuntu' else 'tomcat' }}"
+
   tasks:
     - name: Ensure the target directory exists
       ansible.builtin.file:
@@ -41,11 +39,11 @@
 
     - name: Reload Tomcat
       ansible.builtin.service:
-        name: "{{ 'tomcat8' if ansible_distribution == 'Ubuntu' else 'tomcat' }}"
+        name: "{{ tomcat_service }}"
         state: reloaded
 
     - name: Start Tomcat
       ansible.builtin.service:
-        name: "{{ 'tomcat8' if ansible_distribution == 'Ubuntu' else 'tomcat' }}"
+        name: "{{ tomcat_service }}"
         state: started
 ...
