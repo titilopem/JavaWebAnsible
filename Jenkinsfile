@@ -47,7 +47,7 @@ pipeline {
                     ansiblePlaybook(
                         playbook: 'javawebansible.yml',
                         inventory: 'hosts.ini',
-                        extraVars: ["war_file=target/*.war"]
+                        extraVars: ["war_file=target/*.war".toString()]
                     )
                 }
             }
@@ -57,15 +57,19 @@ pipeline {
     post {
         success {
             echo 'Pipeline succeeded! Send success notification.'
-            emailext subject: "Success: ${currentBuild.fullDisplayName}",
-                     body: "Build, test, and deployment were successful. Congratulations!",
-                     to: 'olawalemada@gmail.com'
+            emailext (
+                subject: "Success: ${currentBuild.fullDisplayName}",
+                body: "Build, test, and deployment were successful. Congratulations!",
+                to: 'olawalemada@gmail.com'
+            )
         }
         failure {
             echo 'Pipeline failed! Send failure notification.'
-            emailext subject: "Failed: ${currentBuild.fullDisplayName}",
-                     body: "Something went wrong. Please check the build, test, and deployment logs.",
-                     to: 'olawalemada@gmail.com'
+            emailext (
+                subject: "Failed: ${currentBuild.fullDisplayName}",
+                body: "Something went wrong. Please check the build, test, and deployment logs.",
+                to: 'olawalemada@gmail.com'
+            )
         }
     }
 }
