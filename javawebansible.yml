@@ -1,23 +1,28 @@
 ---
-- name: Deploy Java Web Application
+- name: Deploy WAR file to Tomcat
   hosts: group1
   become: yes
+
   tasks:
-    - name: Remove existing WAR files from Tomcat webapps directory
-      shell: rm -rf ~/apache*/webapps/*.war
-      when: ansible_os_family in ['RedHat', 'Debian']
+    - name: Ensure the target directory exists
+      file:
+        path: "~/apache*/webapps/"
+        state: directory
 
     - name: Copy WAR file to Tomcat webapps directory
-      shell: mv {{ war_file }} ~/apache*/webapps/
-      when: ansible_os_family in ['RedHat', 'Debian']
+      ansible.builtin.find:
+        paths: "{{ workspace }}/target/"
+        patterns: "*.war"
+      register: war_files
 
-    - name: Reload systemd (if needed)
-      systemd:
-        name: tomcat
-        state: restarted
-      when: ansible_os_family in ['RedHat']
+    - name: Check if WAR file exists
+      fail:
+        msg: "No WAR file found in {{ workspace }}/target/"
+      when: war_files.matched == 0
 
-    - name: Start Tomcat
-      shell: ~/apache-tomcat-7.0.94/bin/startup.sh
-      when: ansible_os_family in ['RedHat', 'Debian']
+    - name: Copy WAR file(s) to Tomcat
+      ansible.builtin.copy:
+        src: "{{ item.path }}"
+        dest: "~/apache*/webapps/"
+      with_items: "{{ war_files.files }}"
 ...
