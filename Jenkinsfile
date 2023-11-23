@@ -10,10 +10,9 @@ pipeline {
         stage('Build and Test') {
             agent { label 'n4c' }
             steps {
-                echo 'Building the project and running tests using N4C'
                 script {
-                    node('n4c') {
-                        WORKSPACE_DIR = pwd()
+                    echo 'Building the project and running tests using N4C'
+                    dir(WORKSPACE_DIR) {
                         sh 'mvn clean package'
                         sh 'mvn test'
                         stash(name: 'build', includes: 'target/*.war')
@@ -28,10 +27,7 @@ pipeline {
                     steps {
                         script {
                             echo 'Copying to Node 1A'
-                            node('n1a') {
-                                unstash 'build'
-                                sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
-                            }
+                            deployToNode('n1a')
                         }
                     }
                 }
@@ -39,10 +35,7 @@ pipeline {
                     steps {
                         script {
                             echo 'Copying to Node 2U'
-                            node('n2u') {
-                                unstash 'build'
-                                sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
-                            }
+                            deployToNode('n2u')
                         }
                     }
                 }
@@ -50,10 +43,7 @@ pipeline {
                     steps {
                         script {
                             echo 'Copying to Node 3C'
-                            node('n3c') {
-                                unstash 'build'
-                                sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
-                            }
+                            deployToNode('n3c')
                         }
                     }
                 }
@@ -65,29 +55,44 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying on Node 6C'
-                    node('n6c') {
-                        ansiblePlaybook(
-                            playbook: 'javawebansible.yml',
-                            inventory: 'hosts.ini',
-                            credentialsId: credentials('n6c')
-                        )
-                    }
+                    deployToNode('n6c')
                 }
             }
         }
 
         stage('Clean Up and Diagnostic Output') {
-            agent { label 'master' } // Run on Jenkins server
+            agent { label 'master' }
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
-                    sh "rm -rf ${WORKSPACE_DIR}/target"
-                    echo 'Current workspace contents:'
-                    sh "ls -la ${WORKSPACE_DIR}"
-                    echo 'Git log:'
-                    sh 'git log -n 5'
+                    cleanUpWorkspace()
+                    displayWorkspaceContents()
+                    displayGitLog()
                 }
             }
         }
+    }
+
+    def deployToNode(nodeLabel) {
+        node(nodeLabel) {
+            script {
+                unstash 'build'
+                sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+            }
+        }
+    }
+
+    def cleanUpWorkspace() {
+        sh "rm -rf ${WORKSPACE_DIR}/target"
+    }
+
+    def displayWorkspaceContents() {
+        echo 'Current workspace contents:'
+        sh "ls -la ${WORKSPACE_DIR}"
+    }
+
+    def displayGitLog() {
+        echo 'Git log:'
+        sh 'git log -n 5'
     }
 }
