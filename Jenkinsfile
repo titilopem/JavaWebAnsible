@@ -57,11 +57,11 @@ pipeline {
             }
         }
 
-        stage('Unstash on n3c') {
-            agent { label 'n3c' }
+        stage('Unstash on n3cc') {
+            agent { label 'n3cc' }
             steps {
                 script {
-                    echo 'Unstashing files on n3c'
+                    echo 'Unstashing files on n3cc'
                     unstash 'build'
                     script {
                         sh "rsync -av \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
