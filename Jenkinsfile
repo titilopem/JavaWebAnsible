@@ -2,10 +2,7 @@ pipeline {
     agent none
 
     environment {
-        N1A_CREDENTIAL = credentials('n1a')
-        N2C_CREDENTIAL = credentials('n2c')
-        N3C_CREDENTIAL = credentials('n3c')
-        N6C_CREDENTIAL = credentials('n3c')
+        N6C_CREDENTIAL = credentials('n6c')
         WORKSPACE_DIR = pwd()
         TOMCAT_WEBAPPS_DIR = '/usr/local/bin/apache-tomcat-10.1.16/webapps'
     }
@@ -31,17 +28,17 @@ pipeline {
                         script {
                             echo 'Copying to Node 1A'
                             unstash 'build'
-                            // Add steps for copying to Node 1A
+                            sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
                         }
                     }
                 }
-                stage('Node 2C') {
-                    agent { label 'n2c' }
+                stage('Node 2U') {
+                    agent { label 'n2u' }
                     steps {
                         script {
-                            echo 'Copying to Node 2C'
+                            echo 'Copying to Node 2U'
                             unstash 'build'
-                            // Add steps for copying to Node 2C
+                            sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
                         }
                     }
                 }
@@ -51,7 +48,7 @@ pipeline {
                         script {
                             echo 'Copying to Node 3C'
                             unstash 'build'
-                            // Add steps for copying to Node 3C
+                            sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
                         }
                     }
                 }
@@ -72,17 +69,6 @@ pipeline {
             }
         }
 
-        stage('Deploy to Tomcat') {
-            agent { label 'master' } // Run on Jenkins server
-            steps {
-                script {
-                    echo 'Copying to Tomcat webapps folder'
-                    unstash 'build'
-                    sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
-                }
-            }
-        }
-
         stage('Clean Up and Diagnostic Output') {
             agent { label 'master' } // Run on Jenkins server
             steps {
@@ -95,25 +81,6 @@ pipeline {
                     sh 'git log -n 5'
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline succeeded! Send success notification.'
-            emailext (
-                subject: "Success: ${currentBuild.fullDisplayName}",
-                body: "Build, test, and deployment were successful. Congratulations!",
-                to: 'olawalemada@gmail.com'
-            )
-        }
-        failure {
-            echo 'Pipeline failed! Send failure notification.'
-            emailext (
-                subject: "Failed: ${currentBuild.fullDisplayName}",
-                body: "Something went wrong. Please check the build, test, and deployment logs.",
-                to: 'olawalemada@gmail.com'
-            )
         }
     }
 }
