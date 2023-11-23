@@ -25,13 +25,7 @@
         state: directory
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
-    - name: Ensure source directory exists on Ansible Controller
-      ansible.builtin.file:
-        path: "/home/centos/workspace/ansibleproject/target/"
-        state: directory
-      when: os_distribution in ['centos', 'ubuntu', 'amazon']
-
-    - name: Debug: List files in source directory
+    - name: Debug - List files in source directory
       ansible.builtin.find:
         paths: "/home/centos/workspace/ansibleproject/target/"
         recurse: yes
