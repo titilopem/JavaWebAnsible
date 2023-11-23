@@ -1,109 +1,96 @@
 pipeline {
-    agent none
+    agent any
 
     environment {
-        WORKSPACE_DIR = ''
-        TOMCAT_WEBAPPS_DIR = '/usr/local/bin/apache-tomcat-10.1.16/webapps'
-        // Add any other environment variables here
-    }
-
-    parameters {
-        // You can add parameters for node labels if needed
-        string(name: 'NODE_1A_LABEL', defaultValue: 'n1a', description: 'Label for Node 1A')
-        string(name: 'NODE_2U_LABEL', defaultValue: 'n2u', description: 'Label for Node 2U')
-        string(name: 'NODE_3C_LABEL', defaultValue: 'n3c', description: 'Label for Node 3C')
-        string(name: 'NODE_6C_LABEL', defaultValue: 'n6c', description: 'Label for Node 6C')
+        N4C_CREDENTIAL = credentials('n3c')
+        N6C_CREDENTIAL = credentials('n3c')
+        WORKSPACE_DIR = pwd()  // Setting WORKSPACE_DIR to Jenkins workspace
     }
 
     stages {
-        stage('Build and Test') {
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout scm
+                }
+            }
+        }
+
+        stage('Build') {
             agent { label 'n4c' }
             steps {
+                echo 'Building the project using N4C'
                 script {
-                    echo 'Building the project and running tests using N4C'
-                    dir(WORKSPACE_DIR) {
-                        sh 'mvn clean package'
-                        sh 'mvn test'
-                        stash(name: 'build', includes: 'target/*.war')
-                    }
+                    sh 'mvn clean package'
                 }
             }
         }
 
-        stage('Deploy on Nodes') {
-            parallel {
-                stage('Node 1A') {
-                    steps {
-                        script {
-                            echo 'Copying to Node 1A'
-                            deployToNode(params.NODE_1A_LABEL)
-                        }
-                    }
-                }
-                stage('Node 2U') {
-                    steps {
-                        script {
-                            echo 'Copying to Node 2U'
-                            deployToNode(params.NODE_2U_LABEL)
-                        }
-                    }
-                }
-                stage('Node 3C') {
-                    steps {
-                        script {
-                            echo 'Copying to Node 3C'
-                            deployToNode(params.NODE_3C_LABEL)
-                        }
-                    }
+        stage('Test') {
+            agent { label 'n4c' }
+            steps {
+                echo 'Running tests using N4C'
+                script {
+                    sh 'mvn test'
+                    stash(name: 'build', includes: "target/*.war")
                 }
             }
         }
 
-        stage('Deploy on Node 6C') {
-            agent { label params.NODE_6C_LABEL }
+        stage('Deploy on Ansible Master') {
+            agent { label 'n6c' }
             steps {
                 script {
-                    echo "Deploying on Node ${params.NODE_6C_LABEL}"
-                    deployToNode(params.NODE_6C_LABEL)
+                    echo 'Deploying on Ansible Master'
+                    unstash 'build'
+                    ansiblePlaybook(
+                        playbook: 'javawebansible.yml',
+                        inventory: 'hosts.ini',
+                        extras: "--extra \"workspace=${WORKSPACE_DIR}\""
+                    )
                 }
             }
         }
 
-        stage('Clean Up and Diagnostic Output') {
-            agent { label 'master' }
+        stage('Clean Up') {
+            agent { label 'n6c' }
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
-                    cleanUpWorkspace()
-                    displayWorkspaceContents()
-                    displayGitLog()
+                    sh "rm -rf ${WORKSPACE_DIR}/target"
                 }
             }
         }
-    }
 
-    def deployToNode(nodeLabel) {
-        return {
-            node(nodeLabel) {
+        stage('Diagnostic Output') {
+            agent { label 'n6c' }
+            steps {
                 script {
-                    unstash 'build'
-                    sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+                    echo 'Current workspace contents:'
+                    sh 'ls -la ${WORKSPACE_DIR}'
+                    echo 'Git log:'
+                    sh 'git log -n 5'
                 }
             }
         }
     }
 
-    def cleanUpWorkspace() {
-        sh "rm -rf ${WORKSPACE_DIR}/target"
-    }
-
-    def displayWorkspaceContents() {
-        echo 'Current workspace contents:'
-        sh "ls -la ${WORKSPACE_DIR}"
-    }
-
-    def displayGitLog() {
-        echo 'Git log:'
-        sh 'git log -n 5'
+    post {
+        success {
+            echo 'Pipeline succeeded! Send success notification.'
+            emailext (
+                subject: "Success: ${currentBuild.fullDisplayName}",
+                body: "Build, test, and deployment were successful. Congratulations!",
+                to: 'olawalemada@gmail.com'
+            )
+        }
+        failure {
+            echo 'Pipeline failed! Send failure notification.'
+            emailext (
+                subject: "Failed: ${currentBuild.fullDisplayName}",
+                body: "Something went wrong. Please check the build, test, and deployment logs.",
+                to: 'olawalemada@gmail.com'
+            )
+        }
     }
 }
