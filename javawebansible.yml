@@ -16,9 +16,9 @@
       ignore_errors: yes
 
     - name: Move new WAR files to Tomcat webapps directory
-      command: "mv /usr/local/bin/*.war {{ webapps_dir }}/"
+      command: "find /usr/local/bin/ -maxdepth 1 -type f -name '*.war' -exec mv {} {{ webapps_dir }}/"
       args:
-        creates: "{{ webapps_dir }}/any_existing_file.marker"  # Ensures the command runs only if *.war files exist
+        creates: "{{ webapps_dir }}/any_existing_file.marker"  # Ensures the command runs only if any *.war files exist
       notify:
         - Restart Tomcat
 
