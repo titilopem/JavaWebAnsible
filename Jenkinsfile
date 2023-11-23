@@ -64,7 +64,7 @@ pipeline {
                     echo 'Unstashing files on n3c'
                     unstash 'build'
                     script {
-                        sh "sudo cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
+                        sh "rsync -av \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
                     }
                 }
             }
