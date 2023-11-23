@@ -64,7 +64,7 @@ pipeline {
                     echo 'Unstashing files on n3cc'
                     unstash 'build'
                     script {
-                        sh "rsync -av \$(find \$(pwd)/target -name '*.war') /usr/local/bin/"
+                        sh "sudo cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/"
                     }
                 }
             }
