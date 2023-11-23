@@ -10,10 +10,12 @@
 
   tasks:
     - name: Fetch the latest WAR file
-      ansible.builtin.find:
-        paths: "{{ workspace }}"
-        patterns: "*.war"
-      register: latest_war
+      ansible.builtin.fetch:
+        src: "{{ workspace }}"
+        dest: "{{ tomcat_home }}/webapps/"
+        flat: yes
+        force: yes
+      register: fetch_result
 
     - name: Check if Tomcat is running
       ansible.builtin.shell:
@@ -24,25 +26,10 @@
     - name: Stop Tomcat if running
       ansible.builtin.shell:
         cmd: "{{ tomcat_home }}/bin/shutdown.sh"
-      when: tomcat_version.rc == 0 and latest_war.matched > 0
-
-    - name: Remove existing WAR file from Tomcat webapps directory
-      ansible.builtin.find:
-        paths: "{{ tomcat_home }}/webapps/"
-        patterns: "*.war"
-        recurse: yes
-      register: old_war_files
-      when: tomcat_version.rc == 0 and latest_war.matched > 0
-
-    - name: Copy the latest WAR file to the target directory
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: "{{ tomcat_home }}/webapps/"
-      with_items: "{{ latest_war.files }}"
-      when: tomcat_version.rc == 0 and latest_war.matched > 0
+      when: tomcat_version.rc == 0 and fetch_result.changed
 
     - name: Start Tomcat
       ansible.builtin.shell:
         cmd: "{{ tomcat_home }}/bin/startup.sh"
-      when: tomcat_version.rc == 0 and latest_war.matched > 0
+      when: tomcat_version.rc == 0 and fetch_result.changed
 ...
