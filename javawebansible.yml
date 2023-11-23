@@ -15,10 +15,16 @@
         patterns: "*.war"
       register: latest_war
 
-    - name: Stop Tomcat
+    - name: Check if Tomcat is running
+      ansible.builtin.shell:
+        cmd: "{{ tomcat_home }}/bin/version.sh"
+      register: tomcat_version
+      ignore_errors: true
+
+    - name: Stop Tomcat if running
       ansible.builtin.shell:
         cmd: "{{ tomcat_home }}/bin/shutdown.sh"
-      when: latest_war.matched > 0
+      when: tomcat_version.rc == 0 and latest_war.matched > 0
 
     - name: Remove existing WAR file from Tomcat webapps directory
       ansible.builtin.find:
@@ -26,23 +32,17 @@
         patterns: "*.war"
         recurse: yes
       register: old_war_files
-      when: latest_war.matched > 0
+      when: tomcat_version.rc == 0 and latest_war.matched > 0
 
     - name: Copy the latest WAR file to the target directory
       ansible.builtin.copy:
         src: "{{ item }}"
         dest: "{{ tomcat_home }}/webapps/"
       with_items: "{{ latest_war.files }}"
-      when: latest_war.matched > 0
+      when: tomcat_version.rc == 0 and latest_war.matched > 0
 
-    - name: Start Tomcat service
-      ansible.builtin.service:
-        name: tomcat  
-        state: started
-        
-    # - name: Start Tomcat
-    #   ansible.builtin.shell:
-    #     cmd: "{{ tomcat_home }}/bin/startup.sh"
-    #   when: latest_war.matched > 0
-
+    - name: Start Tomcat
+      ansible.builtin.shell:
+        cmd: "{{ tomcat_home }}/bin/startup.sh"
+      when: tomcat_version.rc == 0 and latest_war.matched > 0
 ...
