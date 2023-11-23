@@ -35,8 +35,14 @@
       with_items: "{{ latest_war.files }}"
       when: latest_war.matched > 0
 
-    - name: Start Tomcat
-      ansible.builtin.shell:
-        cmd: "{{ tomcat_home }}/bin/startup.sh"
-      when: latest_war.matched > 0
+    - name: Start Tomcat service
+      ansible.builtin.service:
+        name: tomcat  
+        state: started
+        
+    # - name: Start Tomcat
+    #   ansible.builtin.shell:
+    #     cmd: "{{ tomcat_home }}/bin/startup.sh"
+    #   when: latest_war.matched > 0
+
 ...
