@@ -1,57 +1,32 @@
 ---
-- name: Deploy WAR file to Tomcat
+- name: Deploy webapp on tomcat
   hosts: group1
-  gather_facts: true
-  become: yes
-
-  vars:
-    workspace: "{{ workspace | default('/home/centos/workspace/ansibleproject') }}"
-    tomcat_home: "/usr/local/bin/apache-tomcat-10.1.16"
-    tomcat_service: "tomcat"
-
+  become: yes  # Run tasks with sudo
   tasks:
-    - name: Check if Tomcat is installed
-      stat:
-        path: "{{ tomcat_home }}"
-      register: tomcat_installed
-
-    - name: Fetch the latest WAR file
-      ansible.builtin.find:
-        paths: "{{ workspace }}"
-        patterns: "*.war"
-      register: latest_war
-      when: tomcat_installed.stat.exists
+    - name: Check OS distribution
+      ansible.builtin.set_fact:
+        os_distribution: "{{ ansible_distribution | lower }}"
 
     - name: Stop Tomcat
-      ansible.builtin.service:
-        name: "{{ tomcat_service }}"
-        state: stopped
-      when: tomcat_installed.stat.exists
+      ansible.builtin.shell:
+        cmd: "pkill -f catalina"  # Adjust the command based on how Tomcat is started on your nodes
+      ignore_errors: yes
 
-    - name: Remove existing WAR file from Tomcat webapps directory
-      ansible.builtin.find:
-        paths: "{{ tomcat_home }}/webapps/"
-        patterns: "*.war"
-        recurse: yes
-      register: old_war_files
-      when: tomcat_installed.stat.exists
+    - name: Delete existing .war files in Tomcat webapps folder
+      ansible.builtin.file:
+        path: "/usr/local/bin/apache-tomcat-10.1.16/webapps/*war"
+        state: absent
+      when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
-    - name: Copy the latest WAR file to the target directory
+    - name: Copy .war files to Tomcat webapps folder
       ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: "{{ tomcat_home }}/webapps/"
-      with_items: "{{ latest_war.files }}"
-      when: latest_war.matched > 0
+        src: "/home/centos/workspace/ansibleproject/target/*war"
+        dest: "/usr/local/bin/apache-tomcat-10.1.16/webapps/"
+        mode: '0644'
+      when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
-    - name: Reload Tomcat
-      ansible.builtin.service:
-        name: "{{ tomcat_service }}"
-        state: reloaded
-      when: tomcat_installed.stat.exists
-
-    - name: Start Tomcat
-      ansible.builtin.service:
-        name: "{{ tomcat_service }}"
-        state: started
-      when: tomcat_installed.stat.exists
+    - name: Starting Tomcat
+      ansible.builtin.shell:
+        cmd: "nohup /usr/local/bin/apache-tomcat-10.1.16/bin/startup.sh >> /path/to/tomcat.log 2>&1 &"
+      when: os_distribution in ['centos', 'ubuntu', 'amazon']
 ...
