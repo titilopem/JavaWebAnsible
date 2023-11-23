@@ -1,12 +1,13 @@
 pipeline {
-    agent any
+    agent none
 
     environment {
         N1A_CREDENTIAL = credentials('n1a')
         N2C_CREDENTIAL = credentials('n2c')
         N3C_CREDENTIAL = credentials('n3c')
-        N6C_CREDENTIAL = credentials('n6c')  // Corrected typo
-        WORKSPACE_DIR = pwd()  // Setting WORKSPACE_DIR to Jenkins workspace
+        N6C_CREDENTIAL = credentials('n3c')
+        WORKSPACE_DIR = pwd()
+        TOMCAT_WEBAPPS_DIR = '/usr/local/bin/apache-tomcat-10.1.16/webapps'
     }
 
     stages {
@@ -71,8 +72,19 @@ pipeline {
             }
         }
 
+        stage('Deploy to Tomcat') {
+            agent { label 'master' } // Run on Jenkins server
+            steps {
+                script {
+                    echo 'Copying to Tomcat webapps folder'
+                    unstash 'build'
+                    sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+                }
+            }
+        }
+
         stage('Clean Up and Diagnostic Output') {
-            agent any  // Run on Jenkins server
+            agent { label 'master' } // Run on Jenkins server
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
