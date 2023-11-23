@@ -6,19 +6,8 @@
   vars:
     tomcat_version: "apache-tomcat-10.1.16"
     tomcat_home: "/usr/local/bin/{{ tomcat_version }}"
-    webapps_dir: "{{ tomcat_home }}/webapps"
 
   tasks:
-    - name: Remove existing WAR files
-      file:
-        path: "{{ webapps_dir }}/*.war"
-        state: absent
-      ignore_errors: yes
-
-    - name: Move new WAR files to Tomcat webapps directory
-      command: mv "{{ item }}" "{{ webapps_dir }}/"
-      with_fileglob: /usr/local/bin/*.war
-
     - name: Set execute permissions for Tomcat scripts
       ansible.builtin.file:
         path: "{{ tomcat_home }}/bin/*.sh"
