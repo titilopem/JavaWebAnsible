@@ -10,21 +10,12 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
+        stage('Build and Test') {
             agent { label 'n4c' }
             steps {
-                echo 'Building the project using N4C'
+                echo 'Building the project and running tests using N4C'
                 script {
                     sh 'mvn clean package'
-                }
-            }
-        }
-
-        stage('Test') {
-            agent { label 'n4c' }
-            steps {
-                echo 'Running tests using N4C'
-                script {
                     sh 'mvn test'
                     stash(name: 'build', includes: 'target/*.war')
                 }
@@ -80,20 +71,12 @@ pipeline {
             }
         }
 
-        stage('Clean Up') {
-            agent { label 'n6c' }
+        stage('Clean Up and Diagnostic Output') {
+            agent any  // Run on Jenkins server
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
                     sh "rm -rf ${WORKSPACE_DIR}/target"
-                }
-            }
-        }
-
-        stage('Diagnostic Output') {
-            agent { label 'n6c' }
-            steps {
-                script {
                     echo 'Current workspace contents:'
                     sh "ls -la ${WORKSPACE_DIR}"
                     echo 'Git log:'
