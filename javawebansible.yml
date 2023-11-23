@@ -16,11 +16,8 @@
       ignore_errors: yes
 
     - name: Move new WAR files to Tomcat webapps directory
-      command: "find /usr/local/bin/ -maxdepth 1 -type f -name '*.war' -exec mv {} {{ webapps_dir }}/"
-      args:
-        creates: "{{ webapps_dir }}/any_existing_file.marker"  # Ensures the command runs only if any *.war files exist
-      notify:
-        - Restart Tomcat
+      command: mv "{{ item }}" "{{ webapps_dir }}/"
+      with_fileglob: /usr/local/bin/*.war
 
     - name: Set execute permissions for Tomcat scripts
       ansible.builtin.file:
@@ -32,9 +29,8 @@
       ansible.builtin.command: "systemctl daemon-reload"
       when: "'Amazon' in ansible_distribution or 'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
-  handlers:
     - name: Restart Tomcat
-      systemd:
+      ansible.builtin.systemd:
         name: "{{ tomcat_version }}"
         state: restarted
 ...
