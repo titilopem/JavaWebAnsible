@@ -7,29 +7,51 @@
   vars:
     workspace: "{{ workspace | default('/home/centos/workspace/ansibleproject') }}"
     tomcat_home: "/usr/local/bin/apache-tomcat-10.1.16"
+    tomcat_service: "tomcat"
 
   tasks:
+    - name: Check if Tomcat is installed
+      stat:
+        path: "{{ tomcat_home }}"
+      register: tomcat_installed
+
     - name: Fetch the latest WAR file
-      ansible.builtin.fetch:
-        src: "{{ workspace }}"
+      ansible.builtin.find:
+        paths: "{{ workspace }}"
+        patterns: "*.war"
+      register: latest_war
+      when: tomcat_installed.stat.exists
+
+    - name: Stop Tomcat
+      ansible.builtin.service:
+        name: "{{ tomcat_service }}"
+        state: stopped
+      when: tomcat_installed.stat.exists
+
+    - name: Remove existing WAR file from Tomcat webapps directory
+      ansible.builtin.find:
+        paths: "{{ tomcat_home }}/webapps/"
+        patterns: "*.war"
+        recurse: yes
+      register: old_war_files
+      when: tomcat_installed.stat.exists
+
+    - name: Copy the latest WAR file to the target directory
+      ansible.builtin.copy:
+        src: "{{ item }}"
         dest: "{{ tomcat_home }}/webapps/"
-        flat: yes
-        force: yes
-      register: fetch_result
+      with_items: "{{ latest_war.files }}"
+      when: latest_war.matched > 0
 
-    - name: Check if Tomcat is running
-      ansible.builtin.shell:
-        cmd: "{{ tomcat_home }}/bin/version.sh"
-      register: tomcat_version
-      ignore_errors: true
-
-    - name: Stop Tomcat if running
-      ansible.builtin.shell:
-        cmd: "{{ tomcat_home }}/bin/shutdown.sh"
-      when: tomcat_version.rc == 0 and fetch_result.changed
+    - name: Reload Tomcat
+      ansible.builtin.service:
+        name: "{{ tomcat_service }}"
+        state: reloaded
+      when: tomcat_installed.stat.exists
 
     - name: Start Tomcat
-      ansible.builtin.shell:
-        cmd: "{{ tomcat_home }}/bin/startup.sh"
-      when: tomcat_version.rc == 0 and fetch_result.changed
+      ansible.builtin.service:
+        name: "{{ tomcat_service }}"
+        state: started
+      when: tomcat_installed.stat.exists
 ...
