@@ -17,7 +17,7 @@ pipeline {
         }
 
         stage('Build') {
-            agent { label 'n4c' }
+            agent any
             steps {
                 echo 'Building the project using N4C'
                 script {
@@ -27,29 +27,40 @@ pipeline {
             }
         }
 
+        stage('Unstash and Deploy on Nodes') {
+            agent { label 'n1a' }
+            steps {
+                script {
+                    // Unstash into n1a directory
+                    unstash 'build'
+                    sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                }
+            }
+
+            agent { label 'n2u' }
+            steps {
+                script {
+                    // Unstash into n2u directory
+                    unstash 'build'
+                    sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                }
+            }
+
+            agent { label 'n3c' }
+            steps {
+                script {
+                    // Unstash into n3c directory
+                    unstash 'build'
+                    sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                }
+            }
+        }
+
         stage('Deploy on Ansible Master') {
             agent { label 'n6c' }
             steps {
                 script {
                     echo 'Deploying on Ansible Master'
-
-                    // Unstash into n1a directory
-                    unstash 'build'
-                    dir('n1a') {
-                        sh 'cp -r "${WORKSPACE}"/target/*.war .'
-                    }
-
-                    // Unstash into n2u directory
-                    unstash 'build'
-                    dir('n2u') {
-                        sh 'cp -r "${WORKSPACE}"/target/*.war .'
-                    }
-
-                    // Unstash into n3c directory
-                    unstash 'build'
-                    dir('n3c') {
-                        sh 'cp -r "${WORKSPACE}"/target/*.war .'
-                    }
 
                     ansiblePlaybook(
                         playbook: 'javawebansible.yml',
