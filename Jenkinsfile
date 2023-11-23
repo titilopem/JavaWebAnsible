@@ -56,22 +56,22 @@ pipeline {
         }
 
         stage('Deploy on N6C') {
-    agent { label 'n6c' }
-    steps {
-        script {
-            echo 'Deploying on Node 6C'
-            try {
-                ansiblePlaybook(
-                    playbook: 'javawebansible.yml',
-                    inventory: 'hosts.ini',
-                    credentialsId: "${N6C_CREDENTIAL}"
-                )
-            } catch (Exception e) {
-                error "Failed to deploy on Node 6C: ${e.message}"
+            agent { label 'n6c' }
+            steps {
+                script {
+                    echo 'Deploying on Node 6C'
+                    try {
+                        ansiblePlaybook(
+                            playbook: 'javawebansible.yml',
+                            inventory: 'hosts.ini',
+                            credentialsId: "${N6C_CREDENTIAL}"
+                        )
+                    } catch (Exception e) {
+                        error "Failed to deploy on Node 6C: ${e.message}"
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Clean Up and Diagnostic Output') {
             agent { label 'master' } // Run on Jenkins server
