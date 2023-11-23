@@ -41,7 +41,6 @@ pipeline {
                         sudo rm /usr/local/bin/apache-tomcat-10.1.16/webapps/*.war
                         sudo cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/
                     """
-                    }
                 }
             }
         }
@@ -125,3 +124,4 @@ pipeline {
             )
         }
     }
+}
