@@ -37,13 +37,14 @@
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
     - name: Copy .war files to Tomcat webapps folder
-      ansible.builtin.shell:
-        cmd: "rsync -av --include='*.war' --exclude='*' /home/centos/workspace/ansibleproject/target/ /usr/local/bin/apache-tomcat-10.1.16/webapps/"
+      ansible.builtin.copy:
+        src: "/home/centos/workspace/ansibleproject/target/*.war"
+        dest: "/usr/local/bin/apache-tomcat-10.1.16/webapps/"
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
-      register: rsync_result
-
+      register: copy_result
+      
     - debug:
-        var: rsync_result
+        var: copy_result
 
     - name: Starting Tomcat
       ansible.builtin.shell:
