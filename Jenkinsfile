@@ -4,6 +4,15 @@ pipeline {
     environment {
         WORKSPACE_DIR = ''
         TOMCAT_WEBAPPS_DIR = '/usr/local/bin/apache-tomcat-10.1.16/webapps'
+        // Add any other environment variables here
+    }
+
+    parameters {
+        // You can add parameters for node labels if needed
+        string(name: 'NODE_1A_LABEL', defaultValue: 'n1a', description: 'Label for Node 1A')
+        string(name: 'NODE_2U_LABEL', defaultValue: 'n2u', description: 'Label for Node 2U')
+        string(name: 'NODE_3C_LABEL', defaultValue: 'n3c', description: 'Label for Node 3C')
+        string(name: 'NODE_6C_LABEL', defaultValue: 'n6c', description: 'Label for Node 6C')
     }
 
     stages {
@@ -27,7 +36,7 @@ pipeline {
                     steps {
                         script {
                             echo 'Copying to Node 1A'
-                            deployToNode('n1a')
+                            deployToNode(params.NODE_1A_LABEL)
                         }
                     }
                 }
@@ -35,7 +44,7 @@ pipeline {
                     steps {
                         script {
                             echo 'Copying to Node 2U'
-                            deployToNode('n2u')
+                            deployToNode(params.NODE_2U_LABEL)
                         }
                     }
                 }
@@ -43,19 +52,19 @@ pipeline {
                     steps {
                         script {
                             echo 'Copying to Node 3C'
-                            deployToNode('n3c')
+                            deployToNode(params.NODE_3C_LABEL)
                         }
                     }
                 }
             }
         }
 
-        stage('Deploy on N6C') {
-            agent { label 'n6c' }
+        stage('Deploy on Node 6C') {
+            agent { label params.NODE_6C_LABEL }
             steps {
                 script {
-                    echo 'Deploying on Node 6C'
-                    deployToNode('n6c')
+                    echo "Deploying on Node ${params.NODE_6C_LABEL}"
+                    deployToNode(params.NODE_6C_LABEL)
                 }
             }
         }
@@ -74,10 +83,12 @@ pipeline {
     }
 
     def deployToNode(nodeLabel) {
-        node(nodeLabel) {
-            script {
-                unstash 'build'
-                sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+        return {
+            node(nodeLabel) {
+                script {
+                    unstash 'build'
+                    sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+                }
             }
         }
     }
