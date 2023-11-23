@@ -3,25 +3,25 @@
   hosts: group1
   gather_facts: true
   become: yes
-  
+
   vars:
     workspace: "{{ workspace | default('/home/centos/workspace/ansibleproject') }}"
+    tomcat_bin_path: "/usr/local/bin/apache-tomcat-10.1.16/bin"
 
   tasks:
     - name: Check if Tomcat is installed
       stat:
-        path: "/usr/local/apache-tomcat-10.1.16"
+        path: "/usr/local/bin/apache-tomcat-10.1.16"
       register: tomcat_installed
-    
-    - name: Stop Tomcat
-      systemd:
-        name: tomcat
-        state: stopped
+
+    - name: Stop Tomcat (if installed)
+      ansible.builtin.shell:
+        cmd: "{{ tomcat_bin_path }}/shutdown.sh"
       when: tomcat_installed.stat.exists
-      
+
     - name: Remove existing WAR file from Tomcat webapps directory
       ansible.builtin.find:
-        paths: "/usr/local/apache-tomcat-10.1.16/webapps/"
+        paths: "/usr/local/bin/apache-tomcat-10.1.16/webapps/"
         patterns: "*.war"
         recurse: yes
       register: old_war_files
@@ -31,15 +31,10 @@
     - name: Copy the latest WAR file to the target directory
       ansible.builtin.copy:
         src: "{{ latest_war.stdout }}"
-        dest: "/usr/local/apache-tomcat-10.1.16/webapps/"
+        dest: "/usr/local/bin/apache-tomcat-10.1.16/webapps/"
 
-    - name: Reload Tomcat
-      ansible.builtin.service:
-        name: "{{ tomcat_service }}"
-        state: reloaded
-
-    - name: Start Tomcat
-      ansible.builtin.service:
-        name: "{{ tomcat_service }}"
-        state: started
+    - name: Execute Tomcat startup.sh
+      ansible.builtin.shell:
+        cmd: "{{ tomcat_bin_path }}/startup.sh"
+      when: tomcat_installed.stat.exists
 ...
