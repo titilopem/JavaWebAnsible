@@ -38,8 +38,14 @@ pipeline {
                     echo 'Unstashing files on n1a'
                     unstash 'build'
                     sh """
-                        sudo rm /usr/local/bin/apache-tomcat-10.1.16/webapps/*.war
-                        sudo cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/
+                        sudo rm -f /usr/local/bin/apache-tomcat-10.1.16/webapps/*.war
+                        war_file=\$(find \$(pwd)/target -name '*.war' -type f -print -quit)
+                        if [ -n "\$war_file" ]; then
+                           sudo mv "\$war_file" /usr/local/bin/apache-tomcat-10.1.16/webapps/
+                        else
+                           echo "No .war file found in the target directory."
+                           exit 1
+                        fi
                     """
                 }
             }
