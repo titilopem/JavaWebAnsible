@@ -53,7 +53,7 @@ pipeline {
         }
 
         stage('Clean Up') {
-            agent any
+            agent { label 'n6c' }
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
@@ -63,7 +63,7 @@ pipeline {
         }
 
         stage('Diagnostic Output') {
-            agent any
+            agent { label 'n6c' }
             steps {
                 script {
                     echo 'Current workspace contents:'
