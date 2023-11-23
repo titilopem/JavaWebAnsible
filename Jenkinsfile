@@ -2,7 +2,7 @@ pipeline {
     agent none
 
     environment {
-        WORKSPACE_DIR = pwd()
+        WORKSPACE_DIR = ''
         TOMCAT_WEBAPPS_DIR = '/usr/local/bin/apache-tomcat-10.1.16/webapps'
     }
 
@@ -12,9 +12,12 @@ pipeline {
             steps {
                 echo 'Building the project and running tests using N4C'
                 script {
-                    sh 'mvn clean package'
-                    sh 'mvn test'
-                    stash(name: 'build', includes: 'target/*.war')
+                    node {
+                        WORKSPACE_DIR = pwd()
+                        sh 'mvn clean package'
+                        sh 'mvn test'
+                        stash(name: 'build', includes: 'target/*.war')
+                    }
                 }
             }
         }
