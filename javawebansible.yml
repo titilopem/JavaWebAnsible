@@ -19,6 +19,12 @@
         state: absent
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
+    - name: Ensure webapps directory exists
+      ansible.builtin.file:
+        path: "/usr/local/bin/apache-tomcat-10.1.16/webapps/"
+        state: directory
+      when: os_distribution in ['centos', 'ubuntu', 'amazon']
+
     - name: Ensure source directory exists on Ansible Controller
       ansible.builtin.file:
         path: "/home/centos/workspace/ansibleproject/target/"
