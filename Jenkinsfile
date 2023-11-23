@@ -51,8 +51,10 @@ pipeline {
                 script {
                     echo 'Unstashing files on n2u'
                     unstash 'build'
-                    script {
-                        sh "sudo cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
+                    sh """
+                        sudo rm /usr/local/bin/apache-tomcat-10.1.16/webapps/*.war
+                        sudo cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/
+                    """
                     }
                 }
             }
@@ -64,8 +66,10 @@ pipeline {
                 script {
                     echo 'Unstashing files on n3cc'
                     unstash 'build'
-                    script {
-                        sh "sudo cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
+                    sh """
+                        sudo rm /usr/local/bin/apache-tomcat-10.1.16/webapps/*.war
+                        sudo cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/
+                    """
                     }
                 }
             }
