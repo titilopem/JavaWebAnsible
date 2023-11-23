@@ -31,41 +31,23 @@ pipeline {
         }
 
         stage('Unstash and Deploy on Nodes') {
-            stages {
-                stage('n1a') {
-                    agent { label 'n1a' }
-                    steps {
-                        script {
-                            // Unstash into n1a directory
-                            unstash 'ansibleapp'
-                            dir('n1a') {
-                                sh 'cp -r "${WORKSPACE}"/target/*.war .'
-                            }
-                        }
+            matrix {
+                axes {
+                    axis {
+                        name 'NODE'
+                        values 'n1a', 'n2u', 'n3c'
                     }
                 }
-
-                stage('n2u') {
-                    agent { label 'n2u' }
-                    steps {
-                        script {
-                            // Unstash into n2u directory
-                            unstash 'ansibleapp'
-                            dir('n2u') {
-                                sh 'cp -r "${WORKSPACE}"/target/*.war .'
-                            }
-                        }
-                    }
-                }
-
-                stage('n3c') {
-                    agent { label 'n3c' }
-                    steps {
-                        script {
-                            // Unstash into n3c directory
-                            unstash 'ansibleapp'
-                            dir('n3c') {
-                                sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                stages {
+                    stage('Deploy on ${NODE}') {
+                        agent { label "${NODE}" }
+                        steps {
+                            script {
+                                // Unstash into node directory
+                                unstash 'ansibleapp'
+                                dir("${NODE}") {
+                                    sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                                }
                             }
                         }
                     }
