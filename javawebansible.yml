@@ -19,6 +19,12 @@
         state: absent
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
+    - name: Ensure source directory exists on Ansible Controller
+      ansible.builtin.file:
+        path: "/home/centos/workspace/ansibleproject/target/"
+        state: directory
+      when: os_distribution in ['centos', 'ubuntu', 'amazon']
+
     - name: Copy .war files to Tomcat webapps folder
       ansible.builtin.synchronize:
         src: "/home/centos/workspace/ansibleproject/target/"
