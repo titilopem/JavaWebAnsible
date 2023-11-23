@@ -1,5 +1,5 @@
 pipeline {
-    agent none  // No default agent at the top level
+    agent any  // No default agent at the top level
 
     environment {
         N4C_CREDENTIAL = credentials('n3c')
