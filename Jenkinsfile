@@ -4,6 +4,9 @@ pipeline {
     environment {
         N4C_CREDENTIAL = credentials('n3c')
         N6C_CREDENTIAL = credentials('n3c')
+        N2U_CREDENTIAL = credentials('n2u')
+        N1A_CREDENTIAL = credentials('n1a')
+        
         WORKSPACE_DIR = pwd()  // Setting WORKSPACE_DIR to Jenkins workspace
     }
 
@@ -37,38 +40,39 @@ pipeline {
             }
         }
 
-        stage('Unstash on Ansible Master') {
-            agent { label 'n6c' }
+        stage('Unstash on n1a') {
+            agent { label 'n1a' }
             steps {
                 script {
-                    echo 'Unstashing files on n6c'
+                    echo 'Unstashing files on n1a'
                     unstash 'build'
                     script {
-                        sh "cp \$(find ${WORKSPACE_DIR}/target -name '*.war') /tmp/your.war"
+                        sh "cp \$(find ${WORKSPACE_DIR}/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
                     }
                 }
             }
         }
 
-        stage('Copy to Agents n1a, n2u, n3c') {
-            agent { label 'n1a || n2u || n3c' }
+        stage('Unstash on n2u') {
+            agent { label 'n2u' }
             steps {
                 script {
-                    echo 'Copying .war file to n1a, n2u, n3c'
+                    echo 'Unstashing files on n2u'
+                    unstash 'build'
                     script {
-                        if (env.NODE_NAME == 'n1a') {
-                            sshagent(['n1a-ssh-credentials']) {
-                                sh 'scp /tmp/*war ec2-user@n1a:/usr/local/bin/apache-tomcat-10.1.16/webapps'
-                            }
-                        } else if (env.NODE_NAME == 'n2u') {
-                            sshagent(['n2u-ssh-credentials']) {
-                                sh 'scp /tmp/*war ubuntu@n2u:/usr/local/bin/apache-tomcat-10.1.16/webapps'
-                            }
-                        } else if (env.NODE_NAME == 'n3c') {
-                            sshagent(['n3c-ssh-credentials']) {
-                                sh 'scp /tmp/*war centos@n3c:/usr/local/bin/apache-tomcat-10.1.16/webapps'
-                            }
-                        }
+                        sh "cp \$(find ${WORKSPACE_DIR}/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
+                    }
+                }
+            }
+        }
+        stage('Unstash on n3c') {
+            agent { label 'n3c' }
+            steps {
+                script {
+                    echo 'Unstashing files on n3c'
+                    unstash 'build'
+                    script {
+                        sh "cp \$(find ${WORKSPACE_DIR}/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
                     }
                 }
             }
