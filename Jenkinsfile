@@ -1,20 +1,27 @@
 pipeline {
-    agent none  // No default agent at the top level
+    agent any
 
     environment {
         N4C_CREDENTIAL = credentials('n3c')
-        N6C_CREDENTIAL = credentials('n6c')
-        WORKSPACE_DIR = "${WORKSPACE}" // Setting WORKSPACE_DIR to Jenkins workspace
+        N6C_CREDENTIAL = credentials('n3c')
+        WORKSPACE_DIR = pwd()  // Setting WORKSPACE_DIR to Jenkins workspace
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout scm
+                }
+            }
+        }
+
         stage('Build') {
             agent { label 'n4c' }
             steps {
                 echo 'Building the project using N4C'
                 script {
                     sh 'mvn clean package'
-                    stash(name: 'build', includes: "target/*.war")
                 }
             }
         }
@@ -25,29 +32,41 @@ pipeline {
                 echo 'Running tests using N4C'
                 script {
                     sh 'mvn test'
-                    stash(name: 'ansibleapp', includes: "target/*.war")
+                    stash(name: 'build', includes: "target/*.war")
                 }
             }
         }
 
-        stage('Unstash and Deploy on Nodes') {
-            matrix {
-                axes {
-                    axis {
-                        name 'NODE'
-                        values 'n1a', 'n2u', 'n3c'
+        stage('Unstash on Ansible Master') {
+            agent { label 'n6c' }
+            steps {
+                script {
+                    echo 'Unstashing files on n6c'
+                    unstash 'build'
+                    script {
+                        sh 'cp ${WORKSPACE_DIR}/path/to/your.war /tmp/your.war'
                     }
                 }
-                agent { label "${NODE}" }
-                stages {
-                    stage('Deploy on ${NODE}') {
-                        steps {
-                            script {
-                                // Unstash into node directory
-                                unstash 'ansibleapp'
-                                dir("${NODE}") {
-                                    sh 'cp -r "${WORKSPACE}"/target/*.war .'
-                                }
+            }
+        }
+
+        stage('Copy to Agents n1a, n2u, n3c') {
+            agent { label 'n1a || n2u || n3c' }
+            steps {
+                script {
+                    echo 'Copying .war file to n1a, n2u, n3c'
+                    script {
+                        if (env.NODE_NAME == 'n1a') {
+                            sshagent(['n1a-ssh-credentials']) {
+                                sh 'scp /tmp/*war ec2-user@n1a:/usr/local/bin/apache-tomcat-10.1.16/webapps'
+                            }
+                        } else if (env.NODE_NAME == 'n2u') {
+                            sshagent(['n2u-ssh-credentials']) {
+                                sh 'scp /tmp/*war ubuntu@n2u:/usr/local/bin/apache-tomcat-10.1.16/webapps'
+                            }
+                        } else if (env.NODE_NAME == 'n3c') {
+                            sshagent(['n3c-ssh-credentials']) {
+                                sh 'scp /tmp/*war centos@n3c:/usr/local/bin/apache-tomcat-10.1.16/webapps'
                             }
                         }
                     }
@@ -55,16 +74,13 @@ pipeline {
             }
         }
 
-        stage('Deploy on Ansible Master') {
+        stage('Deploy with Ansible Master') {
             agent { label 'n6c' }
             steps {
                 script {
-                    echo 'Deploying on Ansible Master'
-
                     ansiblePlaybook(
                         playbook: 'javawebansible.yml',
-                        inventory: 'hosts.ini',
-                        extras: "--extra \"workspace=${WORKSPACE_DIR}\""
+                        inventory: 'hosts.ini'
                     )
                 }
             }
@@ -75,15 +91,7 @@ pipeline {
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
-
-                    // Clean up n1a directory
-                    sh "rm -rf ${WORKSPACE_DIR}/n1a"
-
-                    // Clean up n2u directory
-                    sh "rm -rf ${WORKSPACE_DIR}/n2u"
-
-                    // Clean up n3c directory
-                    sh "rm -rf ${WORKSPACE_DIR}/n3c"
+                    sh "rm -rf ${WORKSPACE_DIR}/target"
                 }
             }
         }
