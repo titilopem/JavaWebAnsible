@@ -1,5 +1,5 @@
 pipeline {
-    agent any  // No default agent at the top level
+    agent none  // No default agent at the top level
 
     environment {
         N4C_CREDENTIAL = credentials('n3c')
@@ -38,9 +38,9 @@ pipeline {
                         values 'n1a', 'n2u', 'n3c'
                     }
                 }
+                agent { label "${NODE}" }
                 stages {
                     stage('Deploy on ${NODE}') {
-                        agent { label "${NODE}" }
                         steps {
                             script {
                                 // Unstash into node directory
