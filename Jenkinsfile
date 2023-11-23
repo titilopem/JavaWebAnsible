@@ -36,19 +36,19 @@ pipeline {
                     // Unstash into n1a directory
                     unstash 'build'
                     dir('n1a') {
-                        sh 'cp -r ${WORKSPACE_DIR}/target/*.war .'
+                        sh 'cp -r ~/workspace/ansibleproject/target/*.war .'
                     }
 
                     // Unstash into n2u directory
                     unstash 'build'
                     dir('n2u') {
-                        sh 'cp -r ${WORKSPACE_DIR}/target/*.war .'
+                        sh 'cp -r ~/workspace/ansibleproject/target/*.war .'
                     }
 
                     // Unstash into n3c directory
                     unstash 'build'
                     dir('n3c') {
-                        sh 'cp -r ${WORKSPACE_DIR}/target/*.war .'
+                        sh 'cp -r ~/workspace/ansibleproject/target/*.war .'
                     }
 
                     ansiblePlaybook(
