@@ -4,7 +4,7 @@ pipeline {
     environment {
         N4C_CREDENTIAL = credentials('n4c')
         N6C_CREDENTIAL = credentials('n6c')
-        WORKSPACE_DIR = env.WORKSPACE
+        WORKSPACE_DIR = "${WORKSPACE}"
         TOMCAT_WEBAPPS_DIR = '/path/to/tomcat/webapps/'
         SSH_USER_N1A = 'ec2-user'
         SSH_USER_N2U = 'ubuntu'
