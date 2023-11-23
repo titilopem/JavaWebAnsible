@@ -12,7 +12,7 @@ pipeline {
             steps {
                 echo 'Building the project and running tests using N4C'
                 script {
-                    node {
+                    node('n4c') {
                         WORKSPACE_DIR = pwd()
                         sh 'mvn clean package'
                         sh 'mvn test'
@@ -29,8 +29,10 @@ pipeline {
                     steps {
                         script {
                             echo 'Copying to Node 1A'
-                            unstash 'build'
-                            sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+                            node('n1a') {
+                                unstash 'build'
+                                sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+                            }
                         }
                     }
                 }
@@ -39,8 +41,10 @@ pipeline {
                     steps {
                         script {
                             echo 'Copying to Node 2U'
-                            unstash 'build'
-                            sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+                            node('n2u') {
+                                unstash 'build'
+                                sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+                            }
                         }
                     }
                 }
@@ -49,8 +53,10 @@ pipeline {
                     steps {
                         script {
                             echo 'Copying to Node 3C'
-                            unstash 'build'
-                            sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+                            node('n3c') {
+                                unstash 'build'
+                                sh "cp -r ${WORKSPACE_DIR}/target/*.war ${TOMCAT_WEBAPPS_DIR}/"
+                            }
                         }
                     }
                 }
@@ -62,11 +68,13 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying on Node 6C'
-                    ansiblePlaybook(
-                        playbook: 'javawebansible.yml',
-                        inventory: 'hosts.ini',
-                        credentialsId: credentials('n6c')
-                    )
+                    node('n6c') {
+                        ansiblePlaybook(
+                            playbook: 'javawebansible.yml',
+                            inventory: 'hosts.ini',
+                            credentialsId: credentials('n6c')
+                        )
+                    }
                 }
             }
         }
