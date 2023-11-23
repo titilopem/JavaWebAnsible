@@ -2,7 +2,6 @@ pipeline {
     agent none
 
     environment {
-        N6C_CREDENTIAL = credentials('n6c')
         WORKSPACE_DIR = pwd()
         TOMCAT_WEBAPPS_DIR = '/usr/local/bin/apache-tomcat-10.1.16/webapps'
     }
@@ -60,15 +59,11 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying on Node 6C'
-                    try {
-                        ansiblePlaybook(
-                            playbook: 'javawebansible.yml',
-                            inventory: 'hosts.ini',
-                            credentialsId: "${N6C_CREDENTIAL}"
-                        )
-                    } catch (Exception e) {
-                        error "Failed to deploy on Node 6C: ${e.message}"
-                    }
+                    ansiblePlaybook(
+                        playbook: 'javawebansible.yml',
+                        inventory: 'hosts.ini',
+                        credentialsId: credentials('n6c')
+                    )
                 }
             }
         }
