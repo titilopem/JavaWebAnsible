@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent none
 
     environment {
         N1A_CREDENTIAL = credentials('n1a')
