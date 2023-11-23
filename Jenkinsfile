@@ -1,11 +1,11 @@
 pipeline {
-    agent none
+    agent any
 
     environment {
         N1A_CREDENTIAL = credentials('n1a')
         N2C_CREDENTIAL = credentials('n2c')
         N3C_CREDENTIAL = credentials('n3c')
-        N6C_CREDENTIAL = credentials('n3c')
+        N6C_CREDENTIAL = credentials('n6c')  // Corrected typo
         WORKSPACE_DIR = pwd()  // Setting WORKSPACE_DIR to Jenkins workspace
     }
 
@@ -26,7 +26,7 @@ pipeline {
                 echo 'Running tests using N4C'
                 script {
                     sh 'mvn test'
-                    stash(name: 'build', includes: "target/*.war")
+                    stash(name: 'build', includes: 'target/*.war')
                 }
             }
         }
@@ -37,14 +37,9 @@ pipeline {
                     agent { label 'n1a' }
                     steps {
                         script {
-                            echo 'Deploying on Node 1A'
+                            echo 'Copying to Node 1A'
                             unstash 'build'
-                            ansiblePlaybook(
-                                playbook: 'javawebansible.yml',
-                                inventory: 'hosts.ini',
-                                extras: "--extra \"workspace=${WORKSPACE_DIR}\" dest=/usr/local/bin/apache-tomcat-10.1.16/webapps/",
-                                credentialsId: "${N1A_CREDENTIAL}"
-                            )
+                            // Add steps for copying to Node 1A
                         }
                     }
                 }
@@ -52,14 +47,9 @@ pipeline {
                     agent { label 'n2c' }
                     steps {
                         script {
-                            echo 'Deploying on Node 2C'
+                            echo 'Copying to Node 2C'
                             unstash 'build'
-                            ansiblePlaybook(
-                                playbook: 'javawebansible.yml',
-                                inventory: 'hosts.ini',
-                                extras: "--extra \"workspace=${WORKSPACE_DIR}\" dest=/usr/local/bin/apache-tomcat-10.1.16/webapps/",
-                                credentialsId: "${N2C_CREDENTIAL}"
-                            )
+                            // Add steps for copying to Node 2C
                         }
                     }
                 }
@@ -67,14 +57,9 @@ pipeline {
                     agent { label 'n3c' }
                     steps {
                         script {
-                            echo 'Deploying on Node 3C'
+                            echo 'Copying to Node 3C'
                             unstash 'build'
-                            ansiblePlaybook(
-                                playbook: 'javawebansible.yml',
-                                inventory: 'hosts.ini',
-                                extras: "--extra \"workspace=${WORKSPACE_DIR}\" dest=/usr/local/bin/apache-tomcat-10.1.16/webapps/",
-                                credentialsId: "${N3C_CREDENTIAL}"
-                            )
+                            // Add steps for copying to Node 3C
                         }
                     }
                 }
@@ -86,11 +71,9 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying on Node 6C'
-                    unstash 'build'
                     ansiblePlaybook(
                         playbook: 'javawebansible.yml',
                         inventory: 'hosts.ini',
-                        extras: "--extra \"workspace=${WORKSPACE_DIR}\" dest=/usr/local/bin/apache-tomcat-10.1.16/webapps/",
                         credentialsId: "${N6C_CREDENTIAL}"
                     )
                 }
@@ -112,7 +95,7 @@ pipeline {
             steps {
                 script {
                     echo 'Current workspace contents:'
-                    sh 'ls -la ${WORKSPACE_DIR}'
+                    sh "ls -la ${WORKSPACE_DIR}"
                     echo 'Git log:'
                     sh 'git log -n 5'
                 }
