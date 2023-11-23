@@ -52,7 +52,6 @@ pipeline {
                     unstash 'build'
                     echo 'Copying war files:'
                     sh "cp \$(find ${WORKSPACE_DIR}/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
-                    }
                 }
             }
         }
@@ -69,6 +68,7 @@ pipeline {
                 }
             }
         }
+
         stage('Unstash on n3c') {
             agent { label 'n3c' }
             steps {
