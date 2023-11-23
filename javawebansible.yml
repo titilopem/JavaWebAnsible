@@ -32,10 +32,10 @@
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
     - name: Copy .war files to Tomcat webapps folder
-      ansible.builtin.synchronize:
-        src: "/home/centos/workspace/ansibleproject/target/"
+      ansible.builtin.copy:
+        src: "/home/centos/workspace/ansibleproject/target/*.war"
         dest: "/usr/local/bin/apache-tomcat-10.1.16/webapps/"
-        mode: pull
+        mode: '0644'
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
     - name: Starting Tomcat
