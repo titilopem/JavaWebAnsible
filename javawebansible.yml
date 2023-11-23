@@ -18,8 +18,7 @@
       ansible.builtin.command: "systemctl daemon-reload"
       when: "'Amazon' in ansible_distribution or 'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
-    - name: Restart Tomcat
-      ansible.builtin.systemd:
-        name: "{{ tomcat_version }}"
-        state: restarted
+    - name: Starting Tomcat
+      ansible.builtin.shell:
+        cmd: "nohup /usr/local/bin/apache-tomcat-10.1.16/bin/startup.sh &"
 ...
