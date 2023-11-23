@@ -1,7 +1,7 @@
 ---
-- name: Deploy webapp on tomcat
+- name: Deploy webapp on Tomcat
   hosts: group1
-  become: yes  # Run tasks with sudo
+  become: yes
   tasks:
     - name: Check OS distribution
       ansible.builtin.set_fact:
@@ -9,8 +9,9 @@
 
     - name: Stop Tomcat
       ansible.builtin.shell:
-        cmd: "pkill -f catalina"  # Adjust the command based on how Tomcat is started on your nodes
+        cmd: "pkill -f catalina"
       ignore_errors: yes
+      when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
     - name: Delete existing .war files in Tomcat webapps folder
       ansible.builtin.file:
@@ -19,10 +20,10 @@
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
     - name: Copy .war files to Tomcat webapps folder
-      ansible.builtin.copy:
-        src: "/home/centos/workspace/ansibleproject/target/*war"
+      ansible.builtin.synchronize:
+        src: "/home/centos/workspace/ansibleproject/target/"
         dest: "/usr/local/bin/apache-tomcat-10.1.16/webapps/"
-        mode: '0644'
+        mode: pull
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
     - name: Starting Tomcat
