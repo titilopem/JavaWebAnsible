@@ -25,7 +25,6 @@ pipeline {
         stage('Deploy on Nodes') {
             parallel {
                 stage('Node 1A') {
-                    agent { label 'n1a' }
                     steps {
                         script {
                             echo 'Copying to Node 1A'
@@ -37,7 +36,6 @@ pipeline {
                     }
                 }
                 stage('Node 2U') {
-                    agent { label 'n2u' }
                     steps {
                         script {
                             echo 'Copying to Node 2U'
@@ -49,7 +47,6 @@ pipeline {
                     }
                 }
                 stage('Node 3C') {
-                    agent { label 'n3c' }
                     steps {
                         script {
                             echo 'Copying to Node 3C'
