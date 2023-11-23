@@ -44,7 +44,7 @@ pipeline {
                     echo 'Unstashing files on n6c'
                     unstash 'build'
                     script {
-                        sh 'cp ${WORKSPACE_DIR}/path/to/your.war /tmp/your.war'
+                        sh 'cp ${WORKSPACE_DIR}/ansibleproject/target/*war /tmp/your.war'
                     }
                 }
             }
