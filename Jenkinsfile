@@ -5,6 +5,7 @@ pipeline {
         N1A_CREDENTIAL = credentials('n1a')
         N2C_CREDENTIAL = credentials('n2c')
         N3C_CREDENTIAL = credentials('n3c')
+        N6C_CREDENTIAL = credentials('n3c')
         WORKSPACE_DIR = pwd()  // Setting WORKSPACE_DIR to Jenkins workspace
     }
 
@@ -84,6 +85,22 @@ pipeline {
                             )
                         }
                     }
+                }
+            }
+        }
+
+        stage('Deploy on N6C') {
+            agent { label 'n6c' }
+            steps {
+                script {
+                    echo 'Deploying on Node 6C'
+                    unstash 'build'
+                    ansiblePlaybook(
+                        playbook: 'javawebansible.yml',
+                        inventory: 'hosts.ini',
+                        extras: "--extra \"workspace=${WORKSPACE_DIR}\" dest=/usr/local/bin/apache-tomcat-10.1.16/webapps/",
+                        credentialsId: "${N6C_CREDENTIAL}"
+                    )
                 }
             }
         }
