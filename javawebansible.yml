@@ -31,6 +31,12 @@
         state: directory
       when: os_distribution in ['centos', 'ubuntu', 'amazon']
 
+    - name: Debug: List files in source directory
+      ansible.builtin.find:
+        paths: "/home/centos/workspace/ansibleproject/target/"
+        recurse: yes
+      when: os_distribution in ['centos', 'ubuntu', 'amazon']
+
     - name: Copy .war files to Tomcat webapps folder
       ansible.builtin.shell:
         cmd: "rsync -av --include='*.war' --exclude='*' /home/centos/workspace/ansibleproject/target/ /usr/local/bin/apache-tomcat-10.1.16/webapps/"
