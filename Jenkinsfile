@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        N4C_CREDENTIAL = credentials('n3c')
-        N6C_CREDENTIAL = credentials('n3c')
+        N1A_CREDENTIAL = credentials('n1a')
+        N2C_CREDENTIAL = credentials('n2c')
+        N3C_CREDENTIAL = credentials('n3c')
         WORKSPACE_DIR = pwd()  // Setting WORKSPACE_DIR to Jenkins workspace
     }
 
@@ -37,17 +38,52 @@ pipeline {
             }
         }
 
-        stage('Deploy on Ansible Master') {
-            agent { label 'n6c' }
-            steps {
-                script {
-                    echo 'Deploying on Ansible Master'
-                    unstash 'build'
-                    ansiblePlaybook(
-                        playbook: 'javawebansible.yml',
-                        inventory: 'hosts.ini',
-                        extras: "--extra \"workspace=${WORKSPACE_DIR}\""
-                    )
+        stage('Deploy on Nodes') {
+            parallel {
+                stage('Node 1A') {
+                    agent { label 'n1a' }
+                    steps {
+                        script {
+                            echo 'Deploying on Node 1A'
+                            unstash 'build'
+                            ansiblePlaybook(
+                                playbook: 'javawebansible.yml',
+                                inventory: 'hosts.ini',
+                                extras: "--extra \"workspace=${WORKSPACE_DIR}\" dest=/usr/local/bin/apache-tomcat-10.1.16/webapps/",
+                                credentialsId: "${N1A_CREDENTIAL}"
+                            )
+                        }
+                    }
+                }
+                stage('Node 2C') {
+                    agent { label 'n2c' }
+                    steps {
+                        script {
+                            echo 'Deploying on Node 2C'
+                            unstash 'build'
+                            ansiblePlaybook(
+                                playbook: 'javawebansible.yml',
+                                inventory: 'hosts.ini',
+                                extras: "--extra \"workspace=${WORKSPACE_DIR}\" dest=/usr/local/bin/apache-tomcat-10.1.16/webapps/",
+                                credentialsId: "${N2C_CREDENTIAL}"
+                            )
+                        }
+                    }
+                }
+                stage('Node 3C') {
+                    agent { label 'n3c' }
+                    steps {
+                        script {
+                            echo 'Deploying on Node 3C'
+                            unstash 'build'
+                            ansiblePlaybook(
+                                playbook: 'javawebansible.yml',
+                                inventory: 'hosts.ini',
+                                extras: "--extra \"workspace=${WORKSPACE_DIR}\" dest=/usr/local/bin/apache-tomcat-10.1.16/webapps/",
+                                credentialsId: "${N3C_CREDENTIAL}"
+                            )
+                        }
+                    }
                 }
             }
         }
