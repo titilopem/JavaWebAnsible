@@ -1,15 +1,6 @@
 pipeline {
     agent any
-
-    environment {
-        N4C_CREDENTIAL = credentials('n3c')
-        N6C_CREDENTIAL = credentials('n3c')
-        N2U_CREDENTIAL = credentials('n2u')
-        N1A_CREDENTIAL = credentials('n1a')
-        
-        WORKSPACE_DIR = env.WORKSPACE  // Setting WORKSPACE_DIR to Jenkins workspace
-    }
-
+    
     stages {
         stage('Checkout') {
             steps {
@@ -44,14 +35,11 @@ pipeline {
             agent { label 'n1a' }
             steps {
                 script {
-                    echo "Listing files in ${WORKSPACE_DIR}/target:"
-                    sh "ls -la ${WORKSPACE_DIR}/target"
-                    echo "Finding war files:"
-                    sh "find ${WORKSPACE_DIR}/target -name '*.war'"
                     echo 'Unstashing files on n1a'
                     unstash 'build'
-                    echo 'Copying war files:'
-                    sh "cp \$(find ${WORKSPACE_DIR}/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
+                    script {
+                        sh "cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
+                    }
                 }
             }
         }
@@ -63,7 +51,7 @@ pipeline {
                     echo 'Unstashing files on n2u'
                     unstash 'build'
                     script {
-                        sh "cp \$(find ${WORKSPACE_DIR}/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
+                        sh "cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
                     }
                 }
             }
@@ -76,7 +64,7 @@ pipeline {
                     echo 'Unstashing files on n3c'
                     unstash 'build'
                     script {
-                        sh "cp \$(find ${WORKSPACE_DIR}/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
+                        sh "cp \$(find \$(pwd)/target -name '*.war') /usr/local/bin/apache-tomcat-10.1.16/webapps/"
                     }
                 }
             }
@@ -99,7 +87,7 @@ pipeline {
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
-                    sh "rm -rf ${WORKSPACE_DIR}/target"
+                    sh "rm -rf \$(pwd)/target"
                 }
             }
         }
@@ -109,7 +97,7 @@ pipeline {
             steps {
                 script {
                     echo 'Current workspace contents:'
-                    sh 'ls -la ${WORKSPACE_DIR}'
+                    sh 'ls -la $(pwd)'
                     echo 'Git log:'
                     sh 'git log -n 5'
                 }
