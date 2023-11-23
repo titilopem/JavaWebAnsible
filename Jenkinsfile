@@ -22,16 +22,6 @@ pipeline {
                 echo 'Building the project using N4C'
                 script {
                     sh 'mvn clean package'
-                }
-            }
-        }
-
-        stage('Test') {
-            agent { label 'n4c' }
-            steps {
-                echo 'Running tests using N4C'
-                script {
-                    sh 'mvn test'
                     stash(name: 'build', includes: "target/*.war")
                 }
             }
@@ -42,7 +32,25 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying on Ansible Master'
+
+                    // Unstash into n1a directory
                     unstash 'build'
+                    dir('n1a') {
+                        sh 'cp -r ${WORKSPACE_DIR}/target/*.war .'
+                    }
+
+                    // Unstash into n2u directory
+                    unstash 'build'
+                    dir('n2u') {
+                        sh 'cp -r ${WORKSPACE_DIR}/target/*.war .'
+                    }
+
+                    // Unstash into n3c directory
+                    unstash 'build'
+                    dir('n3c') {
+                        sh 'cp -r ${WORKSPACE_DIR}/target/*.war .'
+                    }
+
                     ansiblePlaybook(
                         playbook: 'javawebansible.yml',
                         inventory: 'hosts.ini',
@@ -57,7 +65,15 @@ pipeline {
             steps {
                 script {
                     echo 'Cleaning up unnecessary files or directories'
-                    sh "rm -rf ${WORKSPACE_DIR}/target"
+
+                    // Clean up n1a directory
+                    sh "rm -rf ${WORKSPACE_DIR}/n1a"
+
+                    // Clean up n2u directory
+                    sh "rm -rf ${WORKSPACE_DIR}/n2u"
+
+                    // Clean up n3c directory
+                    sh "rm -rf ${WORKSPACE_DIR}/n3c"
                 }
             }
         }
