@@ -1,23 +1,15 @@
 pipeline {
-    agent any
+    agent none  // No default agent at the top level
 
     environment {
         N4C_CREDENTIAL = credentials('n3c')
-        N6C_CREDENTIAL = credentials('n3c')
+        N6C_CREDENTIAL = credentials('n6c')
         WORKSPACE_DIR = "${WORKSPACE}" // Setting WORKSPACE_DIR to Jenkins workspace
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                script {
-                    checkout scm
-                }
-            }
-        }
-
         stage('Build') {
-            agent any
+            agent { label 'n4c' }
             steps {
                 echo 'Building the project using N4C'
                 script {
@@ -27,31 +19,56 @@ pipeline {
             }
         }
 
+        stage('Test') {
+            agent { label 'n4c' }
+            steps {
+                echo 'Running tests using N4C'
+                script {
+                    sh 'mvn test'
+                    stash(name: 'ansibleapp', includes: "target/*.war")
+                }
+            }
+        }
+
         stage('Unstash and Deploy on Nodes') {
-            agent { label 'n1a' }
-            steps {
-                script {
-                    // Unstash into n1a directory
-                    unstash 'build'
-                    sh 'cp -r "${WORKSPACE}"/target/*.war .'
+            stages {
+                stage('n1a') {
+                    agent { label 'n1a' }
+                    steps {
+                        script {
+                            // Unstash into n1a directory
+                            unstash 'ansibleapp'
+                            dir('n1a') {
+                                sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                            }
+                        }
+                    }
                 }
-            }
 
-            agent { label 'n2u' }
-            steps {
-                script {
-                    // Unstash into n2u directory
-                    unstash 'build'
-                    sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                stage('n2u') {
+                    agent { label 'n2u' }
+                    steps {
+                        script {
+                            // Unstash into n2u directory
+                            unstash 'ansibleapp'
+                            dir('n2u') {
+                                sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                            }
+                        }
+                    }
                 }
-            }
 
-            agent { label 'n3c' }
-            steps {
-                script {
-                    // Unstash into n3c directory
-                    unstash 'build'
-                    sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                stage('n3c') {
+                    agent { label 'n3c' }
+                    steps {
+                        script {
+                            // Unstash into n3c directory
+                            unstash 'ansibleapp'
+                            dir('n3c') {
+                                sh 'cp -r "${WORKSPACE}"/target/*.war .'
+                            }
+                        }
+                    }
                 }
             }
         }
